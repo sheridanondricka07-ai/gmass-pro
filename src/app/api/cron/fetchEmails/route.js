@@ -26,16 +26,20 @@ export async function GET(request) {
 
         const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-        // Fetch latest messages from INBOX and SPAM
+        console.log(`Fetching emails for ${account.email}...`);
+        
+        // Fetch latest messages using a query to ensure we get both Inbox and Spam
         const res = await gmail.users.messages.list({
           userId: 'me',
-          maxResults: 10,
-          labelIds: ['INBOX', 'SPAM']
+          maxResults: 20,
+          q: 'label:inbox OR label:spam'
         });
 
         const messages = res.data.messages || [];
+        console.log(`Found ${messages.length} potential messages for ${account.email}`);
 
         for (const msg of messages) {
+          console.log(`Processing message ${msg.id}...`);
           // Check if message is already in cache
           const existing = await prisma.emailCache.findUnique({
             where: { messageId: msg.id }
@@ -76,6 +80,9 @@ export async function GET(request) {
                 folder: folder
               }
             });
+            console.log(`Saved email ${msg.id} to database.`);
+          } else {
+            console.log(`Email ${msg.id} already exists in database.`);
           }
         }
       } catch (err) {
