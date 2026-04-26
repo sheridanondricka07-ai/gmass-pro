@@ -56,12 +56,22 @@ export default function Dashboard() {
     const now = new Date();
     const seconds = Math.floor((now - date) / 1000);
     
+    if (isNaN(seconds)) return 'Just now';
     if (seconds < 60) return `${seconds} seconds ago`;
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes} minutes ago`;
     const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours} hours ago`;
     return `${Math.floor(hours / 24)} days ago`;
+  };
+
+  const maskEmail = (email) => {
+    if (!email) return '';
+    const [user, domain] = email.split('@');
+    if (!domain) return user;
+    const [domainName, tld] = domain.split('.');
+    const maskedDomain = 'x'.repeat(domainName.length);
+    return `${user}@${maskedDomain}.${tld || 'com'}`;
   };
 
   const getBadgeClass = (folder) => {
@@ -118,7 +128,9 @@ export default function Dashboard() {
                   account.emails.map(email => (
                     <div key={email.id} className={styles.emailItem}>
                       <div className={styles.senderName}>{email.sender.split('<')[0].trim()}</div>
-                      <div className={styles.senderEmail}>{email.sender.includes('<') ? email.sender.split('<')[1].replace('>', '') : ''}</div>
+                      <div className={styles.senderEmail}>
+                        {maskEmail(email.sender.includes('<') ? email.sender.split('<')[1].replace('>', '') : email.sender)}
+                      </div>
                       <div className={styles.subject}>{email.subject}</div>
                       <div className={styles.meta}>
                         <span className={`${styles.badge} ${getBadgeClass(email.folder)}`}>

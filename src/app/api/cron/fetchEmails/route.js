@@ -32,7 +32,7 @@ export async function GET(request) {
         // Fetch latest messages using a query to ensure we get both Inbox and Spam
         const res = await gmail.users.messages.list({
           userId: 'me',
-          maxResults: 20,
+          maxResults: 50,
           q: 'label:inbox OR label:spam'
         });
 
