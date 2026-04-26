@@ -10,8 +10,8 @@ export async function GET(request) {
     if (search) {
       whereClause = {
         OR: [
-          { sender: { contains: search } },
-          { subject: { contains: search } }
+          { sender: { contains: search, mode: 'insensitive' } },
+          { subject: { contains: search, mode: 'insensitive' } }
         ]
       };
     }
