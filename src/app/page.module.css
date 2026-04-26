@@ -1,6 +1,5 @@
 .container {
-  max-width: 1600px;
-  margin: 0 auto;
+  width: 100%;
   padding: 2rem;
 }
 
@@ -27,13 +26,27 @@
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  display: flex;
+  overflow-x: auto;
   gap: 1.5rem;
+  padding-bottom: 1.5rem;
   align-items: start;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) transparent;
+}
+
+.grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.grid::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 10px;
 }
 
 .accountColumn {
+  min-width: 380px;
+  max-width: 450px;
   background: var(--card-bg);
   border-radius: 12px;
   box-shadow: 0 8px 16px rgba(0,0,0,0.06);

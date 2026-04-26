@@ -8,6 +8,8 @@ export default function Dashboard() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+
   const fetchEmails = async () => {
     try {
       const url = new URL('/api/emails', window.location.origin);
@@ -17,6 +19,7 @@ export default function Dashboard() {
       const json = await res.json();
       if (json.accounts) {
         setData(json);
+        setLastUpdated(new Date());
       }
     } catch (err) {
       console.error("Failed to fetch emails", err);
@@ -25,10 +28,26 @@ export default function Dashboard() {
     }
   };
 
+  const triggerBackgroundFetch = async () => {
+    try {
+      await fetch('/api/cron/fetchEmails');
+      fetchEmails(); // Refresh data after fetch
+    } catch (err) {
+      console.error("Background fetch failed", err);
+    }
+  };
+
   useEffect(() => {
     fetchEmails();
-    const interval = setInterval(fetchEmails, 5000); // Auto-refresh every 5s
-    return () => clearInterval(interval);
+    const dataInterval = setInterval(fetchEmails, 10000); // UI Refresh every 10s
+    
+    // Trigger actual Gmail fetch every 2 minutes while page is open
+    const fetchInterval = setInterval(triggerBackgroundFetch, 120000); 
+    
+    return () => {
+      clearInterval(dataInterval);
+      clearInterval(fetchInterval);
+    };
   }, [search]);
 
   // Utility to format "time ago"
@@ -54,13 +73,18 @@ export default function Dashboard() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <input 
-          type="text" 
-          placeholder="Search by address, domain, subject or ESP" 
-          className={styles.searchInput}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div style={{ flex: 1, display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <input 
+            type="text" 
+            placeholder="Search by address, domain, subject or ESP" 
+            className={styles.searchInput}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <span style={{ fontSize: '0.8rem', color: '#888', whiteSpace: 'nowrap' }}>
+            Last sync: {lastUpdated.toLocaleTimeString()}
+          </span>
+        </div>
         <a href="/admin" style={{
           padding: '1rem 2rem', 
           background: 'var(--primary-color)', 
