@@ -11,7 +11,10 @@ export async function GET(request) {
       where: { status: 'active' }
     });
 
+    const report = [];
+
     for (const account of accounts) {
+      const accountReport = { email: account.email, messagesFound: 0, messagesSaved: 0, error: null };
       try {
         const oauth2Client = new google.auth.OAuth2(
           process.env.GOOGLE_CLIENT_ID,
@@ -26,8 +29,6 @@ export async function GET(request) {
 
         const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-        console.log(`Fetching emails for ${account.email}...`);
-        
         // Fetch latest messages using a query to ensure we get both Inbox and Spam
         const res = await gmail.users.messages.list({
           userId: 'me',
@@ -36,6 +37,7 @@ export async function GET(request) {
         });
 
         const messages = res.data.messages || [];
+        accountReport.messagesFound = messages.length;
         console.log(`Found ${messages.length} potential messages for ${account.email}`);
 
         for (const msg of messages) {
@@ -80,6 +82,7 @@ export async function GET(request) {
                 folder: folder
               }
             });
+            accountReport.messagesSaved++;
             console.log(`Saved email ${msg.id} to database.`);
           } else {
             console.log(`Email ${msg.id} already exists in database.`);
@@ -87,13 +90,14 @@ export async function GET(request) {
         }
       } catch (err) {
         console.error(`Error processing account ${account.email}:`, err);
-        // If auth fails, we might want to mark the account as requiring re-auth
+        accountReport.error = err.message;
       }
+      report.push(accountReport);
     }
 
-    return NextResponse.json({ success: true, message: 'Emails fetched successfully' });
+    return NextResponse.json({ success: true, report });
   } catch (error) {
     console.error('Cron job error:', error);
-    return NextResponse.json({ error: 'Failed to fetch emails' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch emails', details: error.message }, { status: 500 });
   }
 }
