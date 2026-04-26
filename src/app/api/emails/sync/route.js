@@ -32,32 +32,31 @@ export async function GET(request) {
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    // Fetch latest messages (no filter to ensure we get everything)
-    // 1. Fetch general latest messages (increased to 400)
+    // 1. Fetch only the latest 20 messages (lightweight)
     const res = await gmail.users.messages.list({
       userId: 'me',
-      maxResults: 400
-    });
-
-    // 2. Perform a targeted search for the specific senders we are missing
-    const targetedRes = await gmail.users.messages.list({
-      userId: 'me',
-      q: 'from:Rumble OR from:Auchan OR from:UVMB',
       maxResults: 20
     });
 
-    const allMessageSummaries = [
-      ...(res.data.messages || []),
-      ...(targetedRes.data.messages || [])
-    ];
-
-    // Remove duplicates
-    const messages = allMessageSummaries.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
-    
+    const messages = res.data.messages || [];
     let savedCount = 0;
     const foundSubjects = [];
 
+    // 2. Check if we already have the latest message in this account's history
+    // If we do, we can skip the heavy processing
+    const latestInDb = await prisma.emailCache.findFirst({
+      where: { accountId: account.id },
+      orderBy: { date: 'desc' }
+    });
+
     for (const msg of messages) {
+      // If we've hit a message we already have, and it's NOT a targeted search, we can potentially stop
+      const existing = await prisma.emailCache.findUnique({
+        where: { messageId: msg.id }
+      });
+
+      if (existing) continue;
+
       try {
         const msgData = await gmail.users.messages.get({
           userId: 'me',
@@ -103,6 +102,9 @@ export async function GET(request) {
           }
         });
         savedCount++;
+        
+        // Stop after 10 new messages to keep it fast
+        if (savedCount >= 10) break;
       } catch (e) {
         console.error(`Failed to process message ${msg.id}`, e);
       }
@@ -112,7 +114,7 @@ export async function GET(request) {
       success: true, 
       syncingAccount: account.email,
       savedCount, 
-      foundSubjects: foundSubjects.slice(0, 20) 
+      foundSubjects: foundSubjects.slice(0, 10) 
     });
   } catch (error) {
     console.error('Individual Sync Error:', error);
