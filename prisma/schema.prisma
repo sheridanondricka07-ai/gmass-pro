@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model SeedAccount {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  accessToken  String?
+  refreshToken String?
+  expiryDate   BigInt?
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+  emails       EmailCache[]
+}
+
+model EmailCache {
+  id        Int      @id @default(autoincrement())
+  accountId Int
+  account   SeedAccount @relation(fields: [accountId], references: [id])
+  messageId String   @unique
+  sender    String
+  subject   String
+  snippet   String
+  date      DateTime
+  folder    String   // "Primary Inbox", "Spam", "Updates"
+  createdAt DateTime @default(now())
+}

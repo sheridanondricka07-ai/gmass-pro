@@ -1,0 +1,41 @@
+:root {
+  --bg-color: #f8f9fa;
+  --text-color: #333;
+  --border-color: #e0e0e0;
+  
+  --primary-color: #4285f4;
+  --primary-hover: #3367d6;
+
+  --inbox-bg: #e6f4ea;
+  --inbox-text: #137333;
+  
+  --spam-bg: #fce8e6;
+  --spam-text: #c5221f;
+
+  --updates-bg: #fef7e0;
+  --updates-text: #b06000;
+  
+  --card-bg: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  line-height: 1.5;
+}
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
