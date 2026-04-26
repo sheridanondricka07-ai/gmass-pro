@@ -102,17 +102,23 @@ export default function Dashboard() {
       ) : (
         <div className={styles.grid}>
           {data.accounts.map(account => (
-            <div key={account.id} className={styles.accountColumn}>
-              <div className={styles.accountHeader}>
+            <div key={account.id} className={styles.accountRow}>
+              <div className={styles.accountInfo}>
+                <div className={styles.gmailLogo}>
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 6L12 11L4 6H20ZM20 18H4V8L12 13L20 8V18Z" fill="#EA4335"/>
+                  </svg>
+                </div>
                 <div className={styles.accountEmail}>{account.email}</div>
-                <div className={styles.accountStatus}>Google Workspace Seed</div>
+                <div className={styles.accountStatus}>Google Workspace</div>
               </div>
               
               <div className={styles.emailList}>
                 {account.emails && account.emails.length > 0 ? (
                   account.emails.map(email => (
                     <div key={email.id} className={styles.emailItem}>
-                      <div className={styles.sender}>{email.sender}</div>
+                      <div className={styles.senderName}>{email.sender.split('<')[0].trim()}</div>
+                      <div className={styles.senderEmail}>{email.sender.includes('<') ? email.sender.split('<')[1].replace('>', '') : ''}</div>
                       <div className={styles.subject}>{email.subject}</div>
                       <div className={styles.meta}>
                         <span className={`${styles.badge} ${getBadgeClass(email.folder)}`}>
@@ -129,8 +135,8 @@ export default function Dashboard() {
             </div>
           ))}
           {data.accounts.length === 0 && !loading && (
-            <div style={{gridColumn: '1 / -1', textAlign: 'center'}}>
-              No seed accounts connected. Please go to /admin to connect accounts.
+            <div style={{textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '8px'}}>
+              No seed accounts connected. Please click "Manage Seeds" to connect accounts.
             </div>
           )}
         </div>
