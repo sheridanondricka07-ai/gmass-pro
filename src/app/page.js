@@ -61,6 +61,16 @@ export default function Dashboard() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        <a href="/admin" style={{
+          padding: '1rem 2rem', 
+          background: 'var(--primary-color)', 
+          color: 'white', 
+          borderRadius: '8px',
+          fontWeight: 'bold',
+          whiteSpace: 'nowrap'
+        }}>
+          Manage Seeds
+        </a>
       </div>
 
       {loading && data.accounts.length === 0 ? (
