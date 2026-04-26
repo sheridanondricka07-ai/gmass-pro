@@ -33,12 +33,27 @@ export async function GET(request) {
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
     // Fetch latest messages (no filter to ensure we get everything)
+    // 1. Fetch general latest messages (increased to 400)
     const res = await gmail.users.messages.list({
       userId: 'me',
-      maxResults: 300
+      maxResults: 400
     });
 
-    const messages = res.data.messages || [];
+    // 2. Perform a targeted search for the specific senders we are missing
+    const targetedRes = await gmail.users.messages.list({
+      userId: 'me',
+      q: 'from:Rumble OR from:Auchan OR from:UVMB',
+      maxResults: 20
+    });
+
+    const allMessageSummaries = [
+      ...(res.data.messages || []),
+      ...(targetedRes.data.messages || [])
+    ];
+
+    // Remove duplicates
+    const messages = allMessageSummaries.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+    
     let savedCount = 0;
     const foundSubjects = [];
 
