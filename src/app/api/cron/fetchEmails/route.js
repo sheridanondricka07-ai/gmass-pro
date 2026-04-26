@@ -58,10 +58,10 @@ export async function GET(request) {
             const headers = msgData.data.payload.headers || [];
             const subject = headers.find(h => h.name === 'Subject')?.value || '(No Subject)';
             const from = headers.find(h => h.name === 'From')?.value || '(Unknown Sender)';
-            const dateStr = headers.find(h => h.name === 'Date')?.value;
-            let date = dateStr ? new Date(dateStr) : new Date();
             
-            // Ensure date is valid
+            // Use Gmail's internalDate (arrival time) for perfect sorting
+            const internalDate = msgData.data.internalDate;
+            let date = internalDate ? new Date(parseInt(internalDate)) : new Date();
             if (isNaN(date.getTime())) date = new Date();
             
             const labelIds = msgData.data.labelIds || [];
