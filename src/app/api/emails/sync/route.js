@@ -32,31 +32,17 @@ export async function GET(request) {
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    // 1. Fetch only the latest 20 messages (lightweight)
+    // 1. Fetch the latest 100 messages (broader scan)
     const res = await gmail.users.messages.list({
       userId: 'me',
-      maxResults: 20
+      maxResults: 100
     });
 
     const messages = res.data.messages || [];
     let savedCount = 0;
     const foundSubjects = [];
 
-    // 2. Check if we already have the latest message in this account's history
-    // If we do, we can skip the heavy processing
-    const latestInDb = await prisma.emailCache.findFirst({
-      where: { accountId: account.id },
-      orderBy: { date: 'desc' }
-    });
-
     for (const msg of messages) {
-      // If we've hit a message we already have, and it's NOT a targeted search, we can potentially stop
-      const existing = await prisma.emailCache.findUnique({
-        where: { messageId: msg.id }
-      });
-
-      if (existing) continue;
-
       try {
         const msgData = await gmail.users.messages.get({
           userId: 'me',
@@ -74,7 +60,21 @@ export async function GET(request) {
         if (isNaN(date.getTime())) date = new Date();
         
         const labelIds = msgData.data.labelIds || [];
-        foundSubjects.push({ subject, labels: labelIds, date: date.toISOString() });
+        
+        // Add to debug list IMMEDIATELY (before any filtering or existence checks)
+        foundSubjects.push({ 
+          subject, 
+          from,
+          id: msg.id,
+          labels: labelIds, 
+          date: date.toISOString() 
+        });
+
+        const existing = await prisma.emailCache.findUnique({
+          where: { messageId: msg.id }
+        });
+
+        if (existing) continue;
 
         if (labelIds.includes('DRAFT') || (labelIds.includes('SENT') && !labelIds.includes('INBOX'))) continue;
 
@@ -102,9 +102,6 @@ export async function GET(request) {
           }
         });
         savedCount++;
-        
-        // Stop after 10 new messages to keep it fast
-        if (savedCount >= 10) break;
       } catch (e) {
         console.error(`Failed to process message ${msg.id}`, e);
       }
@@ -114,7 +111,7 @@ export async function GET(request) {
       success: true, 
       syncingAccount: account.email,
       savedCount, 
-      foundSubjects: foundSubjects.slice(0, 10) 
+      foundSubjects: foundSubjects.slice(0, 50) 
     });
   } catch (error) {
     console.error('Individual Sync Error:', error);
