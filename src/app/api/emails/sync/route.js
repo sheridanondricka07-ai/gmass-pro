@@ -35,7 +35,7 @@ export async function GET(request) {
     // Fetch latest messages (no filter to ensure we get everything)
     const res = await gmail.users.messages.list({
       userId: 'me',
-      maxResults: 200
+      maxResults: 300
     });
 
     const messages = res.data.messages || [];
@@ -62,7 +62,6 @@ export async function GET(request) {
         const labelIds = msgData.data.labelIds || [];
         foundSubjects.push({ subject, labels: labelIds, date: date.toISOString() });
 
-        // Skip only if it's explicitly a DRAFT or SENT mail (we want everything else)
         if (labelIds.includes('DRAFT') || (labelIds.includes('SENT') && !labelIds.includes('INBOX'))) continue;
 
         let folder = 'Primary Inbox';
@@ -94,7 +93,12 @@ export async function GET(request) {
       }
     }
 
-    return NextResponse.json({ success: true, savedCount, foundSubjects: foundSubjects.slice(0, 15) });
+    return NextResponse.json({ 
+      success: true, 
+      syncingAccount: account.email,
+      savedCount, 
+      foundSubjects: foundSubjects.slice(0, 20) 
+    });
   } catch (error) {
     console.error('Individual Sync Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
