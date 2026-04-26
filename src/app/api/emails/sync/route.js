@@ -12,7 +12,7 @@ export async function GET(request) {
 
   try {
     const account = await prisma.seedAccount.findUnique({
-      where: { id: accountId }
+      where: { id: parseInt(accountId) }
     });
 
     if (!account) {
