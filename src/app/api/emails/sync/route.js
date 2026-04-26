@@ -35,7 +35,7 @@ export async function GET(request) {
     // Fetch latest messages (no filter to ensure we get everything)
     const res = await gmail.users.messages.list({
       userId: 'me',
-      maxResults: 100
+      maxResults: 200
     });
 
     const messages = res.data.messages || [];
@@ -55,23 +55,20 @@ export async function GET(request) {
         const subject = headers.find(h => h.name === 'Subject')?.value || '(No Subject)';
         const from = headers.find(h => h.name === 'From')?.value || '(Unknown Sender)';
         
-        // Use Gmail's internalDate (arrival time) for perfect sorting
         const internalDate = msgData.data.internalDate;
         let date = internalDate ? new Date(parseInt(internalDate)) : new Date();
         if (isNaN(date.getTime())) date = new Date();
         
-        foundSubjects.push({ subject, id: msg.id, date: date.toISOString() });
-
         const labelIds = msgData.data.labelIds || [];
-        const isRelevant = labelIds.some(l => ['INBOX', 'SPAM', 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_SOCIAL'].includes(l));
-        
-        if (!isRelevant) continue;
+        foundSubjects.push({ subject, labels: labelIds, date: date.toISOString() });
+
+        // Skip only if it's explicitly a DRAFT or SENT mail (we want everything else)
+        if (labelIds.includes('DRAFT') || (labelIds.includes('SENT') && !labelIds.includes('INBOX'))) continue;
 
         let folder = 'Primary Inbox';
         if (labelIds.includes('SPAM')) folder = 'Spam';
         else if (labelIds.includes('CATEGORY_UPDATES') || labelIds.includes('CATEGORY_PROMOTIONS') || labelIds.includes('CATEGORY_SOCIAL')) folder = 'Updates';
 
-        // Use upsert to FORCE update the data and timestamp
         await prisma.emailCache.upsert({
           where: { messageId: msg.id },
           update: {
@@ -97,7 +94,7 @@ export async function GET(request) {
       }
     }
 
-    return NextResponse.json({ success: true, savedCount, foundSubjects: foundSubjects.slice(0, 10) });
+    return NextResponse.json({ success: true, savedCount, foundSubjects: foundSubjects.slice(0, 15) });
   } catch (error) {
     console.error('Individual Sync Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
