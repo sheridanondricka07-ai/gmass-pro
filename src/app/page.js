@@ -29,26 +29,31 @@ export default function Dashboard() {
   };
 
   const triggerBackgroundFetch = async () => {
-    try {
-      await fetch('/api/cron/fetchEmails');
-      fetchEmails(); // Refresh data after fetch
-    } catch (err) {
-      console.error("Background fetch failed", err);
+    if (data.accounts.length === 0) return;
+    
+    // Cycle through accounts and sync them one by one for a real-time feel
+    for (const account of data.accounts) {
+      try {
+        await fetch(`/api/emails/sync?accountId=${account.id}`);
+      } catch (err) {
+        console.error(`Sync failed for ${account.email}`, err);
+      }
     }
+    fetchEmails(); // Final refresh
   };
 
   useEffect(() => {
     fetchEmails();
-    const dataInterval = setInterval(fetchEmails, 10000); // UI Refresh every 10s
+    const dataInterval = setInterval(fetchEmails, 5000); // UI Refresh every 5s
     
-    // Trigger actual Gmail fetch every 2 minutes while page is open
-    const fetchInterval = setInterval(triggerBackgroundFetch, 120000); 
+    // Trigger granular Gmail fetch every 15 seconds while page is open
+    const fetchInterval = setInterval(triggerBackgroundFetch, 15000); 
     
     return () => {
       clearInterval(dataInterval);
       clearInterval(fetchInterval);
     };
-  }, [search]);
+  }, [search, data.accounts.length]);
 
   // Utility to format "time ago"
   const timeAgo = (dateString) => {
