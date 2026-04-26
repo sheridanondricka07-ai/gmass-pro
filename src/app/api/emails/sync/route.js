@@ -32,9 +32,14 @@ export async function GET(request) {
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    // 1. Fetch the latest 100 messages (broader scan)
+    // 1. Fetch only emails from today and yesterday (Force Google to show new stuff)
+    const today = new Date();
+    today.setDate(today.getDate() - 1);
+    const afterDate = today.toISOString().split('T')[0].replace(/-/g, '/');
+    
     const res = await gmail.users.messages.list({
       userId: 'me',
+      q: `after:${afterDate}`,
       maxResults: 100
     });
 
@@ -61,11 +66,9 @@ export async function GET(request) {
         
         const labelIds = msgData.data.labelIds || [];
         
-        // Add to debug list IMMEDIATELY (before any filtering or existence checks)
         foundSubjects.push({ 
           subject, 
           from,
-          id: msg.id,
           labels: labelIds, 
           date: date.toISOString() 
         });
