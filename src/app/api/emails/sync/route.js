@@ -32,11 +32,10 @@ export async function GET(request) {
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    // Fetch only last 10 messages for this specific account
+    // Fetch latest messages (no filter to ensure we get everything)
     const res = await gmail.users.messages.list({
       userId: 'me',
-      maxResults: 10,
-      q: 'label:inbox OR label:spam'
+      maxResults: 100
     });
 
     const messages = res.data.messages || [];
@@ -55,16 +54,25 @@ export async function GET(request) {
           metadataHeaders: ['From', 'Subject', 'Date']
         });
 
-        const headers = msgData.data.payload.headers;
+        const headers = msgData.data.payload.headers || [];
         const subject = headers.find(h => h.name === 'Subject')?.value || '(No Subject)';
         const from = headers.find(h => h.name === 'From')?.value || '(Unknown Sender)';
         const dateStr = headers.find(h => h.name === 'Date')?.value;
-        const date = dateStr ? new Date(dateStr) : new Date();
+        let date = dateStr ? new Date(dateStr) : new Date();
+        
+        // Ensure date is valid
+        if (isNaN(date.getTime())) date = new Date();
         
         const labelIds = msgData.data.labelIds || [];
+        
+        // Only save if it's in a relevant folder (Inbox, Spam, or Categories)
+        const isRelevant = labelIds.some(l => ['INBOX', 'SPAM', 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_SOCIAL'].includes(l));
+        
+        if (!isRelevant) continue;
+
         let folder = 'Primary Inbox';
         if (labelIds.includes('SPAM')) folder = 'Spam';
-        else if (labelIds.includes('CATEGORY_UPDATES') || labelIds.includes('CATEGORY_PROMOTIONS')) folder = 'Updates';
+        else if (labelIds.includes('CATEGORY_UPDATES') || labelIds.includes('CATEGORY_PROMOTIONS') || labelIds.includes('CATEGORY_SOCIAL')) folder = 'Updates';
 
         await prisma.emailCache.create({
           data: {
