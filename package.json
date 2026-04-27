@@ -7,7 +7,8 @@
     "build": "prisma generate && prisma db push && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test-fetch": "node scratch/fetch_data.js"
   },
   "dependencies": {
     "@prisma/client": "^5.12.0",

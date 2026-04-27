@@ -30,20 +30,30 @@ export default function Dashboard() {
     }
   };
 
+  const [syncMessage, setSyncMessage] = useState('');
+
   const triggerBackgroundFetch = async () => {
     if (data.accounts.length === 0) return;
     setIsSyncing(true);
+    setSyncMessage('Starting sync...');
     
     for (const account of data.accounts) {
       try {
-        await fetch(`/api/emails/sync?accountId=${account.id}`);
+        const res = await fetch(`/api/emails/sync?accountId=${account.id}`);
+        const json = await res.json();
+        if (json.error) {
+          setSyncMessage(`Error: ${json.error}`);
+        } else {
+          setSyncMessage(`Saved ${json.savedCount} new emails. Found: ${json.foundSubjects?.length || 0}`);
+        }
       } catch (err) {
-        console.error(`Sync failed for ${account.email}`, err);
+        setSyncMessage(`Network error: ${err.message}`);
       }
     }
     await fetchEmails(); 
     setIsSyncing(false);
   };
+
 
   useEffect(() => {
     fetchEmails();
@@ -153,6 +163,11 @@ export default function Dashboard() {
                 >
                   {isSyncing ? 'Syncing...' : 'Force Sync'}
                 </button>
+                {syncMessage && (
+                  <div style={{ marginTop: '10px', fontSize: '0.8rem', color: syncMessage.includes('Error') ? 'red' : 'green', background: '#f5f5f5', padding: '5px', borderRadius: '4px' }}>
+                    {syncMessage}
+                  </div>
+                )}
               </div>
               
               <div className={styles.emailList}>
