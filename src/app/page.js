@@ -162,7 +162,7 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
-          ))}
+          )})}
           {data.accounts.length === 0 && !loading && (
             <div style={{textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '8px'}}>
               No seed accounts connected. Please click "Manage Seeds" to connect accounts.
