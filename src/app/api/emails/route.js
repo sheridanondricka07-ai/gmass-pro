@@ -28,7 +28,7 @@ export async function GET(request) {
         const emails = await prisma.emailCache.findMany({
           where: { ...whereClause, accountId: account.id },
           orderBy: { date: 'desc' },
-          take: 10,
+          take: 50,
         });
         
         return {

@@ -32,22 +32,20 @@ export async function GET(request) {
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    // 1. General search for today's emails
-    const today = new Date();
-    today.setDate(today.getDate() - 1);
-    const afterDate = today.toISOString().split('T')[0].replace(/-/g, '/');
+    // 1. Precise time search (last 24 hours using Unix timestamp)
+    const oneDayAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
     
     const res = await gmail.users.messages.list({
       userId: 'me',
-      q: `after:${afterDate}`,
-      maxResults: 100
+      q: `after:${oneDayAgo}`,
+      maxResults: 150
     });
 
-    // 2. Targeted "Subject Hunter" for Newly and Rumble (bypass any category filters)
+    // 2. Targeted "Sender Hunter" (much more reliable than subject search)
     const hunterRes = await gmail.users.messages.list({
       userId: 'me',
-      q: 'subject:"Newly verification code" OR subject:"Rumble verification code" OR subject:"Weleda"',
-      maxResults: 10
+      q: 'from:Newly OR from:Rumble OR from:Weleda OR from:UVMB OR from:Auchan',
+      maxResults: 20
     });
 
     const allMessageSummaries = [
@@ -81,7 +79,7 @@ export async function GET(request) {
         const labelIds = msgData.data.labelIds || [];
         foundSubjects.push({ subject, from, labels: labelIds, date: date.toISOString(), id: msg.id });
 
-        // Force all Newly/Rumble/Weleda into the Inbox folder for visibility
+        // Force 'Updates' folder for these specific senders to ensure they match Gmail UI
         let folder = 'Primary Inbox';
         if (labelIds.includes('SPAM')) folder = 'Spam';
         else if (labelIds.includes('CATEGORY_UPDATES') || labelIds.includes('CATEGORY_PROMOTIONS') || labelIds.includes('CATEGORY_SOCIAL')) folder = 'Updates';
