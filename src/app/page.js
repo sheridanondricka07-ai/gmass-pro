@@ -92,6 +92,16 @@ export default function Dashboard() {
     return `${user}@${maskedDomain}.${tld || 'com'}`;
   };
 
+  const getSenderColor = (sender) => {
+    if (!sender) return '#ffffff';
+    let hash = 0;
+    for (let i = 0; i < sender.length; i++) {
+      hash = sender.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 40%, 85%)`; 
+  };
+
   const getBadgeClass = (folder) => {
     if (folder === 'Primary Inbox') return styles.badgeInbox;
     if (folder === 'Spam') return styles.badgeSpam;
@@ -172,21 +182,27 @@ export default function Dashboard() {
               
               <div className={styles.emailList}>
                 {accountEmails && accountEmails.length > 0 ? (
-                  accountEmails.map(email => (
-                    <div key={email.id} className={styles.emailItem}>
-                      <div className={styles.senderName}>{email.sender.split('<')[0].trim()}</div>
-                      <div className={styles.senderEmail}>
-                        {maskEmail(email.sender.includes('<') ? email.sender.split('<')[1].replace('>', '') : email.sender)}
+                  accountEmails.map(email => {
+                    const senderName = email.sender.split('<')[0].trim();
+                    const senderEmailPart = email.sender.includes('<') ? email.sender.split('<')[1].replace('>', '') : email.sender;
+                    return (
+                      <div key={email.id} className={styles.emailItem} style={{ backgroundColor: getSenderColor(senderEmailPart) }}>
+                        <div className={styles.senderHeader}>
+                          <span className={styles.senderName}>{senderName}</span>
+                        </div>
+                        <div className={styles.senderEmail}>
+                          {maskEmail(senderEmailPart)}
+                        </div>
+                        <div className={styles.subject}>{email.subject}</div>
+                        <div className={styles.meta}>
+                          <span className={`${styles.badge} ${getBadgeClass(email.folder)}`}>
+                            {email.folder}
+                          </span>
+                          <span className={styles.time}>{timeAgo(email.date)}</span>
+                        </div>
                       </div>
-                      <div className={styles.subject}>{email.subject}</div>
-                      <div className={styles.meta}>
-                        <span className={`${styles.badge} ${getBadgeClass(email.folder)}`}>
-                          {email.folder}
-                        </span>
-                        <span className={styles.time}>{timeAgo(email.date)}</span>
-                      </div>
-                    </div>
-                  ))
+                    )
+                  })
                 ) : (
                   <div className={styles.emptyState}>No emails found.</div>
                 )}

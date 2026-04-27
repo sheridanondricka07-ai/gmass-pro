@@ -35,15 +35,21 @@ export async function GET(request) {
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    // 1. Fetch the absolute newest 50 emails directly from the INBOX
-    // This ignores all date/time filters and just gets the top of the mailbox
-    const res = await gmail.users.messages.list({
+    // 1. Fetch the absolute newest emails directly from the INBOX
+    const inboxRes = await gmail.users.messages.list({
       userId: 'me',
       labelIds: ['INBOX'],
-      maxResults: 50
+      maxResults: 30
     });
 
-    // 2. Targeted "Sender Hunter" 
+    // 2. Fetch the absolute newest emails directly from SPAM
+    const spamRes = await gmail.users.messages.list({
+      userId: 'me',
+      labelIds: ['SPAM'],
+      maxResults: 20
+    });
+
+    // 3. Targeted "Sender Hunter" (just in case they skip inbox/spam)
     const hunterRes = await gmail.users.messages.list({
       userId: 'me',
       q: 'Newly OR Rumble OR Weleda OR UVMB OR Auchan OR StashAway',
@@ -51,7 +57,8 @@ export async function GET(request) {
     });
 
     const allMessageSummaries = [
-      ...(res.data.messages || []),
+      ...(inboxRes.data.messages || []),
+      ...(spamRes.data.messages || []),
       ...(hunterRes.data.messages || [])
     ];
 
