@@ -46,8 +46,8 @@ export default function Dashboard() {
     fetchEmails();
     const dataInterval = setInterval(fetchEmails, 5000); // UI Refresh every 5s
     
-    // Trigger granular Gmail fetch every 5 seconds while page is open
-    const fetchInterval = setInterval(triggerBackgroundFetch, 5000); 
+    // Trigger granular Gmail fetch every 30 seconds while page is open (to avoid Vercel firewall)
+    const fetchInterval = setInterval(triggerBackgroundFetch, 30000); 
     
     return () => {
       clearInterval(dataInterval);
