@@ -54,12 +54,30 @@ export async function GET(request) {
     ];
 
     // Remove duplicates
-    const messages = allMessageSummaries.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+    const uniqueMessages = allMessageSummaries.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
     
+    // HUGE OPTIMIZATION: Check which messages we already have BEFORE making 150 API calls
+    const messageIds = uniqueMessages.map(m => m.id);
+    const existingEmails = await prisma.emailCache.findMany({
+      where: { messageId: { in: messageIds } },
+      select: { messageId: true }
+    });
+    const existingMessageIds = new Set(existingEmails.map(e => e.messageId));
+    
+    const messagesToFetch = uniqueMessages.filter(m => !existingMessageIds.has(m.id));
+
     let savedCount = 0;
     const foundSubjects = [];
 
-    for (const msg of messages) {
+    // Process existing messages for the debug report (so we know they were found)
+    for (const msg of uniqueMessages) {
+      if (existingMessageIds.has(msg.id)) {
+        foundSubjects.push({ subject: '(Already in DB)', from: '(Known)', id: msg.id });
+      }
+    }
+
+    // Now only fetch the NEW messages from the Gmail API
+    for (const msg of messagesToFetch) {
       try {
         const msgData = await gmail.users.messages.get({
           userId: 'me',
