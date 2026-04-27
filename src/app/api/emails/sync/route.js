@@ -2,6 +2,9 @@ import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const accountId = searchParams.get('accountId');
@@ -41,10 +44,10 @@ export async function GET(request) {
       maxResults: 150
     });
 
-    // 2. Targeted "Sender Hunter" (much more reliable than subject search)
+    // 2. Targeted "Sender Hunter" (much more reliable than strict 'from:' search)
     const hunterRes = await gmail.users.messages.list({
       userId: 'me',
-      q: 'from:Newly OR from:Rumble OR from:Weleda OR from:UVMB OR from:Auchan',
+      q: 'Newly OR Rumble OR Weleda OR UVMB OR Auchan OR StashAway',
       maxResults: 20
     });
 
