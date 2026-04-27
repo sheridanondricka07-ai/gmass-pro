@@ -117,8 +117,11 @@ export default function Dashboard() {
       {loading && data.accounts.length === 0 ? (
         <div style={{ textAlign: 'center', marginTop: '50px' }}>Loading Dashboard...</div>
       ) : (
-        <div className={styles.grid}>
-          {data.accounts.map(account => (
+        <div className={styles.dashboard}>
+        {data.accounts.map(account => {
+          const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000);
+          const accountEmails = account.emails ? account.emails.filter(e => new Date(e.date) >= fiveMinsAgo) : [];
+          return (
             <div key={account.id} className={styles.accountRow}>
               <div className={styles.accountInfo}>
                 <div className={styles.gmailLogo}>
@@ -138,8 +141,8 @@ export default function Dashboard() {
               </div>
               
               <div className={styles.emailList}>
-                {account.emails && account.emails.length > 0 ? (
-                  account.emails.map(email => (
+                {accountEmails && accountEmails.length > 0 ? (
+                  accountEmails.map(email => (
                     <div key={email.id} className={styles.emailItem}>
                       <div className={styles.senderName}>{email.sender.split('<')[0].trim()}</div>
                       <div className={styles.senderEmail}>
