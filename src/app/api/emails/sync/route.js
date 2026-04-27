@@ -34,13 +34,13 @@ export async function GET(request) {
 
     // 1. Fetch only emails from today and yesterday (Force Google to show new stuff)
     const today = new Date();
-    today.setDate(today.getDate() - 1);
+    today.setDate(today.getDate() - 2); // Look back 2 days to be safe
     const afterDate = today.toISOString().split('T')[0].replace(/-/g, '/');
     
     const res = await gmail.users.messages.list({
       userId: 'me',
       q: `after:${afterDate}`,
-      maxResults: 100
+      maxResults: 150
     });
 
     const messages = res.data.messages || [];
@@ -70,17 +70,11 @@ export async function GET(request) {
           subject, 
           from,
           labels: labelIds, 
-          date: date.toISOString() 
+          date: date.toISOString(),
+          id: msg.id
         });
 
-        const existing = await prisma.emailCache.findUnique({
-          where: { messageId: msg.id }
-        });
-
-        if (existing) continue;
-
-        if (labelIds.includes('DRAFT') || (labelIds.includes('SENT') && !labelIds.includes('INBOX'))) continue;
-
+        // ABSOLUTELY NO FILTERING - we want to see why things are missing
         let folder = 'Primary Inbox';
         if (labelIds.includes('SPAM')) folder = 'Spam';
         else if (labelIds.includes('CATEGORY_UPDATES') || labelIds.includes('CATEGORY_PROMOTIONS') || labelIds.includes('CATEGORY_SOCIAL')) folder = 'Updates';
