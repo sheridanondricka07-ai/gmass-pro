@@ -10,6 +10,7 @@ export default function Dashboard() {
 
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [isSyncing, setIsSyncing] = useState(false);
+  const [timeFilter, setTimeFilter] = useState('all'); // all, 5, 15, 60
 
   const fetchEmails = async () => {
     try {
@@ -98,6 +99,16 @@ export default function Dashboard() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <select 
+            value={timeFilter} 
+            onChange={(e) => setTimeFilter(e.target.value)}
+            style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+          >
+            <option value="all">Show All Time</option>
+            <option value="5">Last 5 Minutes</option>
+            <option value="15">Last 15 Minutes</option>
+            <option value="60">Last 1 Hour</option>
+          </select>
           <span style={{ fontSize: '0.8rem', color: '#888', whiteSpace: 'nowrap' }}>
             Last sync: {lastUpdated.toLocaleTimeString()} {isSyncing && '(Syncing...)'}
           </span>
@@ -119,8 +130,12 @@ export default function Dashboard() {
       ) : (
         <div className={styles.dashboard}>
         {data.accounts.map(account => {
-          const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000);
-          const accountEmails = account.emails ? account.emails.filter(e => new Date(e.date) >= fiveMinsAgo) : [];
+          let accountEmails = account.emails || [];
+          if (timeFilter !== 'all') {
+             const mins = parseInt(timeFilter);
+             const cutoff = new Date(Date.now() - mins * 60 * 1000);
+             accountEmails = accountEmails.filter(e => new Date(e.date) >= cutoff);
+          }
           return (
             <div key={account.id} className={styles.accountRow}>
               <div className={styles.accountInfo}>
