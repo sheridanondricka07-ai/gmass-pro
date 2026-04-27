@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const fetchEmails = async () => {
     try {
@@ -30,8 +31,8 @@ export default function Dashboard() {
 
   const triggerBackgroundFetch = async () => {
     if (data.accounts.length === 0) return;
+    setIsSyncing(true);
     
-    // Cycle through accounts and sync them one by one for a real-time feel
     for (const account of data.accounts) {
       try {
         await fetch(`/api/emails/sync?accountId=${account.id}`);
@@ -39,7 +40,8 @@ export default function Dashboard() {
         console.error(`Sync failed for ${account.email}`, err);
       }
     }
-    fetchEmails(); // Final refresh
+    await fetchEmails(); 
+    setIsSyncing(false);
   };
 
   useEffect(() => {
@@ -97,7 +99,7 @@ export default function Dashboard() {
             onChange={(e) => setSearch(e.target.value)}
           />
           <span style={{ fontSize: '0.8rem', color: '#888', whiteSpace: 'nowrap' }}>
-            Last sync: {lastUpdated.toLocaleTimeString()}
+            Last sync: {lastUpdated.toLocaleTimeString()} {isSyncing && '(Syncing...)'}
           </span>
         </div>
         <a href="/admin" style={{
@@ -126,6 +128,13 @@ export default function Dashboard() {
                 </div>
                 <div className={styles.accountEmail}>{account.email}</div>
                 <div className={styles.accountStatus}>Google Workspace</div>
+                <button 
+                  onClick={triggerBackgroundFetch} 
+                  disabled={isSyncing}
+                  className={styles.forceSyncBtn}
+                >
+                  {isSyncing ? 'Syncing...' : 'Force Sync'}
+                </button>
               </div>
               
               <div className={styles.emailList}>
