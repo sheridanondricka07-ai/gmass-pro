@@ -32,18 +32,32 @@ export async function GET(request) {
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    // 1. Fetch only emails from today and yesterday (Force Google to show new stuff)
+    // 1. General search for today's emails
     const today = new Date();
-    today.setDate(today.getDate() - 2); // Look back 2 days to be safe
+    today.setDate(today.getDate() - 1);
     const afterDate = today.toISOString().split('T')[0].replace(/-/g, '/');
     
     const res = await gmail.users.messages.list({
       userId: 'me',
       q: `after:${afterDate}`,
-      maxResults: 150
+      maxResults: 100
     });
 
-    const messages = res.data.messages || [];
+    // 2. Targeted "Subject Hunter" for Newly and Rumble (bypass any category filters)
+    const hunterRes = await gmail.users.messages.list({
+      userId: 'me',
+      q: 'subject:"Newly verification code" OR subject:"Rumble verification code" OR subject:"Weleda"',
+      maxResults: 10
+    });
+
+    const allMessageSummaries = [
+      ...(res.data.messages || []),
+      ...(hunterRes.data.messages || [])
+    ];
+
+    // Remove duplicates
+    const messages = allMessageSummaries.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+    
     let savedCount = 0;
     const foundSubjects = [];
 
@@ -65,16 +79,9 @@ export async function GET(request) {
         if (isNaN(date.getTime())) date = new Date();
         
         const labelIds = msgData.data.labelIds || [];
-        
-        foundSubjects.push({ 
-          subject, 
-          from,
-          labels: labelIds, 
-          date: date.toISOString(),
-          id: msg.id
-        });
+        foundSubjects.push({ subject, from, labels: labelIds, date: date.toISOString(), id: msg.id });
 
-        // ABSOLUTELY NO FILTERING - we want to see why things are missing
+        // Force all Newly/Rumble/Weleda into the Inbox folder for visibility
         let folder = 'Primary Inbox';
         if (labelIds.includes('SPAM')) folder = 'Spam';
         else if (labelIds.includes('CATEGORY_UPDATES') || labelIds.includes('CATEGORY_PROMOTIONS') || labelIds.includes('CATEGORY_SOCIAL')) folder = 'Updates';
