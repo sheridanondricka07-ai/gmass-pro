@@ -35,20 +35,19 @@ export async function GET(request) {
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    // 1. Precise time search (last 24 hours using Unix timestamp)
-    const oneDayAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
-    
+    // 1. Fetch the absolute newest 50 emails directly from the INBOX
+    // This ignores all date/time filters and just gets the top of the mailbox
     const res = await gmail.users.messages.list({
       userId: 'me',
-      q: `after:${oneDayAgo}`,
-      maxResults: 150
+      labelIds: ['INBOX'],
+      maxResults: 50
     });
 
-    // 2. Targeted "Sender Hunter" (much more reliable than strict 'from:' search)
+    // 2. Targeted "Sender Hunter" 
     const hunterRes = await gmail.users.messages.list({
       userId: 'me',
       q: 'Newly OR Rumble OR Weleda OR UVMB OR Auchan OR StashAway',
-      maxResults: 20
+      maxResults: 10
     });
 
     const allMessageSummaries = [
