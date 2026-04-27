@@ -35,35 +35,15 @@ export async function GET(request) {
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    // 1. Fetch the absolute newest emails directly from the INBOX
-    const inboxRes = await gmail.users.messages.list({
+    // 1. BULLETPROOF LOGIC: Fetch the absolute newest 100 emails across ALL folders
+    // By omitting 'labelIds' and 'q', Google guarantees this returns the newest 100 emails 
+    // received anywhere in the account (Inbox, Spam, Updates, Forums, etc.)
+    const res = await gmail.users.messages.list({
       userId: 'me',
-      labelIds: ['INBOX'],
-      maxResults: 30
+      maxResults: 100
     });
 
-    // 2. Fetch the absolute newest emails directly from SPAM
-    const spamRes = await gmail.users.messages.list({
-      userId: 'me',
-      labelIds: ['SPAM'],
-      maxResults: 20
-    });
-
-    // 3. Targeted "Sender Hunter" (just in case they skip inbox/spam)
-    const hunterRes = await gmail.users.messages.list({
-      userId: 'me',
-      q: 'Newly OR Rumble OR Weleda OR UVMB OR Auchan OR StashAway',
-      maxResults: 10
-    });
-
-    const allMessageSummaries = [
-      ...(inboxRes.data.messages || []),
-      ...(spamRes.data.messages || []),
-      ...(hunterRes.data.messages || [])
-    ];
-
-    // Remove duplicates
-    const uniqueMessages = allMessageSummaries.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+    const uniqueMessages = res.data.messages || [];
     
     // HUGE OPTIMIZATION: Check which messages we already have BEFORE making 150 API calls
     const messageIds = uniqueMessages.map(m => m.id);
@@ -104,6 +84,12 @@ export async function GET(request) {
         if (isNaN(date.getTime())) date = new Date();
         
         const labelIds = msgData.data.labelIds || [];
+        
+        // Skip outgoing or deleted messages
+        if (labelIds.includes('DRAFT') || labelIds.includes('SENT') || labelIds.includes('TRASH') || labelIds.includes('CHAT')) {
+          continue;
+        }
+
         foundSubjects.push({ subject, from, labels: labelIds, date: date.toISOString(), id: msg.id });
 
         // Force 'Updates' folder for these specific senders to ensure they match Gmail UI
