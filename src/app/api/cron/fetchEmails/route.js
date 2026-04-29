@@ -32,7 +32,7 @@ export async function GET(request) {
         // Fetch latest messages (no filter to ensure we get everything)
         const res = await gmail.users.messages.list({
           userId: 'me',
-          maxResults: 200
+          maxResults: 100
         });
 
         const messages = res.data.messages || [];
@@ -65,9 +65,11 @@ export async function GET(request) {
             if (isNaN(date.getTime())) date = new Date();
             
             const labelIds = msgData.data.labelIds || [];
-
-            // Skip outgoing or deleted messages (consistent with sync route)
-            if (labelIds.some(l => ['DRAFT', 'SENT', 'TRASH'].includes(l))) continue;
+            
+            // Only save if it's in a relevant folder (Inbox, Spam, or Categories)
+            const isRelevant = labelIds.some(l => ['INBOX', 'SPAM', 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_SOCIAL'].includes(l));
+            
+            if (!isRelevant) continue;
 
             let folder = 'Primary Inbox';
             
