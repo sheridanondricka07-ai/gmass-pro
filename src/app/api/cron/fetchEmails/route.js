@@ -32,7 +32,7 @@ export async function GET(request) {
         // Fetch latest messages (no filter to ensure we get everything)
         const res = await gmail.users.messages.list({
           userId: 'me',
-          maxResults: 100
+          maxResults: 200
         });
 
         const messages = res.data.messages || [];
@@ -67,7 +67,7 @@ export async function GET(request) {
             const labelIds = msgData.data.labelIds || [];
 
             // Skip outgoing or deleted messages (consistent with sync route)
-            if (labelIds.some(l => ['DRAFT', 'SENT', 'TRASH', 'CHAT'].includes(l))) continue;
+            if (labelIds.some(l => ['DRAFT', 'SENT', 'TRASH'].includes(l))) continue;
 
             let folder = 'Primary Inbox';
             
