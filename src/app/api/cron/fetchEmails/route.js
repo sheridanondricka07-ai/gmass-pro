@@ -66,7 +66,7 @@ export async function GET(request) {
             if (isNaN(date.getTime())) date = new Date();
             
             const labelIds = msgData.data.labelIds || [];
-            console.log(labelIds)
+
             // Skip outgoing or deleted messages only
             if (labelIds.some(l => ['DRAFT', 'SENT', 'TRASH', 'CHAT'].includes(l))) continue;
 
@@ -85,7 +85,13 @@ export async function GET(request) {
             ){
               folder = 'Forums';
             }
-            console.log(labelIds,folder);
+            
+            export const fetchDataM = async () => {
+            const labelIdsMessage = [labelIds, folder];
+              labelIdsM = labelIds;
+              folder = folderM;
+            return { labelIdsM, folder }; // Return the variables
+            };
             await prisma.emailCache.create({
               data: {
                 accountId: account.id,
