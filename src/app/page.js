@@ -166,12 +166,6 @@ export default function Dashboard() {
                 </div>
                 <div className={styles.accountEmail}>{account.email}</div>
                 <div className={styles.accountStatus}>Google Workspace</div>
-                
-                {syncMessage && (
-                  <div style={{ marginTop: '10px', fontSize: '0.8rem', color: syncMessage.includes('Error') ? 'red' : 'green', background: '#f5f5f5', padding: '5px', borderRadius: '4px' }}>
-                    {syncMessage}
-                  </div>
-                )}
               </div>
               
               <div className={styles.emailList}>
