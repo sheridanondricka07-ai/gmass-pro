@@ -65,11 +65,9 @@ export async function GET(request) {
             if (isNaN(date.getTime())) date = new Date();
             
             const labelIds = msgData.data.labelIds || [];
-            
-            // Only save if it's in a relevant folder (Inbox, Spam, or Categories)
-            const isRelevant = labelIds.some(l => ['INBOX', 'SPAM', 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_SOCIAL'].includes(l));
-            
-            if (!isRelevant) continue;
+
+            // Skip outgoing or deleted messages (consistent with sync route)
+            if (labelIds.some(l => ['DRAFT', 'SENT', 'TRASH', 'CHAT'].includes(l))) continue;
 
             let folder = 'Primary Inbox';
             
