@@ -95,7 +95,12 @@ export async function GET(request) {
         // Force 'Updates' folder for these specific senders to ensure they match Gmail UI
         let folder = 'Primary Inbox';
         if (labelIds.includes('SPAM')) folder = 'Spam';
-        else if (labelIds.includes('CATEGORY_UPDATES') || labelIds.includes('CATEGORY_PROMOTIONS') || labelIds.includes('CATEGORY_SOCIAL')) folder = 'Updates';
+        else if (
+          labelIds.includes('CATEGORY_UPDATES') ||
+          labelIds.includes('CATEGORY_PROMOTIONS') ||
+          labelIds.includes('CATEGORY_SOCIAL') ||
+          labelIds.includes('CATEGORY_FORUMS')
+        ) folder = 'Updates';
 
         await prisma.emailCache.upsert({
           where: { messageId: msg.id },
