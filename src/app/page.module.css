@@ -136,16 +136,18 @@
 }
 
 .badge {
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: bold;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
   color: white;
+  display: inline-block;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.badgePrimary { background-color: #1a73e8; }
-.badgePromotions { background-color: #1e8e3e; }
-.badgeSocial { background-color: #d93025; } /* Social is often red/orange in some Gmail themes, but let's use a distinct color */
+.badgePrimary { background-color: #1e8e3e; }
+.badgePromotions { background-color: #34a853; }
+.badgeSocial { background-color: #d93025; }
 .badgeUpdates { background-color: #e37400; }
 .badgeForums { background-color: #70757a; }
 .badgeSpam { background-color: #b71c1c; }

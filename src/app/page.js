@@ -94,7 +94,7 @@ export default function Dashboard() {
   };
 
   const getBadgeClass = (folder) => {
-    if (folder === 'Primary') return styles.badgePrimary;
+    if (folder === 'Primary' || folder === 'Primary Inbox') return styles.badgePrimary;
     if (folder === 'Promotions') return styles.badgePromotions;
     if (folder === 'Social') return styles.badgeSocial;
     if (folder === 'Forums') return styles.badgeForums;
