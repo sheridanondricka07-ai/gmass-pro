@@ -38,9 +38,11 @@ export async function GET(request) {
     // 1. BULLETPROOF LOGIC: Fetch the absolute newest 100 emails across ALL folders
     // By omitting 'labelIds' and 'q', Google guarantees this returns the newest 100 emails 
     // received anywhere in the account (Inbox, Spam, Updates, Forums, etc.)
+    // This fetches the latest 100 messages including those in Spam and Trash
     const res = await gmail.users.messages.list({
       userId: 'me',
-      maxResults: 100
+      maxResults: 100,
+      includeSpamTrash: true 
     });
 
     const uniqueMessages = res.data.messages || [];
