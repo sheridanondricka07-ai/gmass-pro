@@ -32,7 +32,8 @@ export async function GET(request) {
         // Fetch latest messages (no filter to ensure we get everything)
         const res = await gmail.users.messages.list({
           userId: 'me',
-          maxResults: 100
+          maxResults: 100,
+          includeSpamTrash: true 
         });
 
         const messages = res.data.messages || [];
