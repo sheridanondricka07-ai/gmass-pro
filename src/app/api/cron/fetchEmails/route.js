@@ -66,7 +66,7 @@ export async function GET(request) {
             if (isNaN(date.getTime())) date = new Date();
             
             const labelIds = msgData.data.labelIds || [];
-
+            console.log(labelIds)
             // Skip outgoing or deleted messages only
             if (labelIds.some(l => ['DRAFT', 'SENT', 'TRASH', 'CHAT'].includes(l))) continue;
 
