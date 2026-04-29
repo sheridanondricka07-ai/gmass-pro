@@ -85,7 +85,7 @@ export async function GET(request) {
             ){
               folder = 'Forums';
             }
-            consol.log(labelIds,folder);
+            console.log(labelIds,folder);
             await prisma.emailCache.create({
               data: {
                 accountId: account.id,
