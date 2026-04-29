@@ -83,9 +83,8 @@ export async function GET(request) {
               folder = 'Forums';
             }
             export const fetchDataM = async () => {
-            const labelIdsMessage = [labelIdsM, folderM];
-              labelIdsM = labelIds;
-              folderM = folder;
+              var labelIdsM = labelIds;
+              var folderM = folder;
             return { labelIdsM, folderM }; // Return the variables
             };
             await prisma.emailCache.create({
