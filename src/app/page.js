@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import styles from './page.module.css';
-import { fetchData } from './fetchFile';
+import { fetchDataM } from './fetchFile';
 
 const data = await fetchDataM();
 console.log("Data from fetch file:", data.labelIdsM, data.folderM);
