@@ -82,11 +82,7 @@ export async function GET(request) {
             } else if (labelIds.includes('CATEGORY_FORUMS')) {
               folder = 'Forums';
             }
-            export const fetchDataM = async () => {
-              var labelIdsM = labelIds;
-              var folderM = folder;
-            return { labelIdsM, folderM }; // Return the variables
-            };
+
             await prisma.emailCache.create({
               data: {
                 accountId: account.id,
