@@ -70,28 +70,18 @@ export async function GET(request) {
             // Skip outgoing or deleted messages only
             if (labelIds.some(l => ['DRAFT', 'SENT', 'TRASH', 'CHAT'].includes(l))) continue;
 
-            let folder = 'Primary Inbox';
-
+            let folder = 'Primary';
             if (labelIds.includes('SPAM')) {
               folder = 'Spam';
-            } else if (
-              labelIds.includes('CATEGORY_UPDATES') ||
-              labelIds.includes('CATEGORY_PROMOTIONS') ||
-              labelIds.includes('CATEGORY_SOCIAL')
-            ) {
+            } else if (labelIds.includes('CATEGORY_UPDATES')) {
               folder = 'Updates';
-            }else if (
-              labelIds.includes('CATEGORY_FORUMS')
-            ){
+            } else if (labelIds.includes('CATEGORY_PROMOTIONS')) {
+              folder = 'Promotions';
+            } else if (labelIds.includes('CATEGORY_SOCIAL')) {
+              folder = 'Social';
+            } else if (labelIds.includes('CATEGORY_FORUMS')) {
               folder = 'Forums';
             }
-            
-            export const fetchDataM = async () => {
-            const labelIdsMessage = [labelIds, folder];
-              labelIdsM = labelIds;
-              folder = folderM;
-            return { labelIdsM, folder }; // Return the variables
-            };
             await prisma.emailCache.create({
               data: {
                 accountId: account.id,

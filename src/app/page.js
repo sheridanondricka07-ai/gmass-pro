@@ -30,24 +30,15 @@ export default function Dashboard() {
     }
   };
 
-  const [syncMessage, setSyncMessage] = useState('');
-
   const triggerBackgroundFetch = async () => {
     if (data.accounts.length === 0) return;
     setIsSyncing(true);
-    setSyncMessage('Starting sync...');
     
     for (const account of data.accounts) {
       try {
-        const res = await fetch(`/api/emails/sync?accountId=${account.id}`);
-        const json = await res.json();
-        if (json.error) {
-          setSyncMessage(`Error: ${json.error}`);
-        } else {
-          setSyncMessage(`Saved ${json.savedCount} new emails. Found: ${json.foundSubjects?.length || 0}`);
-        }
+        await fetch(`/api/emails/sync?accountId=${account.id}`);
       } catch (err) {
-        setSyncMessage(`Network error: ${err.message}`);
+        console.error("Background sync failed for account", account.id, err);
       }
     }
     await fetchEmails(); 
@@ -59,8 +50,8 @@ export default function Dashboard() {
     fetchEmails();
     const dataInterval = setInterval(fetchEmails, 5000); // UI Refresh every 5s
     
-    // Trigger granular Gmail fetch every 30 seconds while page is open (to avoid Vercel firewall)
-    const fetchInterval = setInterval(triggerBackgroundFetch, 30000); 
+    // Trigger granular Gmail fetch every 10 seconds while page is open
+    const fetchInterval = setInterval(triggerBackgroundFetch, 10000); 
     
     return () => {
       clearInterval(dataInterval);
@@ -103,9 +94,18 @@ export default function Dashboard() {
   };
 
   const getBadgeClass = (folder) => {
-    if (folder === 'Primary Inbox') return styles.badgeInbox;
+    if (folder === 'Primary') return styles.badgePrimary;
+    if (folder === 'Promotions') return styles.badgePromotions;
+    if (folder === 'Social') return styles.badgeSocial;
+    if (folder === 'Forums') return styles.badgeForums;
+    if (folder === 'Updates') return styles.badgeUpdates;
     if (folder === 'Spam') return styles.badgeSpam;
     return styles.badgeUpdates;
+  };
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
   };
 
   return (
@@ -133,16 +133,33 @@ export default function Dashboard() {
             Last sync: {lastUpdated.toLocaleTimeString()} {isSyncing && '(Syncing...)'}
           </span>
         </div>
-        <a href="/admin" style={{
-          padding: '1rem 2rem', 
-          background: 'var(--primary-color)', 
-          color: 'white', 
-          borderRadius: '8px',
-          fontWeight: 'bold',
-          whiteSpace: 'nowrap'
-        }}>
-          Manage Seeds
-        </a>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <a href="/admin" style={{
+            padding: '1rem 2rem', 
+            background: 'var(--primary-color)', 
+            color: 'white', 
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            whiteSpace: 'nowrap'
+          }}>
+            Manage Seeds
+          </a>
+          <button 
+            onClick={handleLogout}
+            style={{
+              padding: '1rem 2rem', 
+              background: '#f1f3f4', 
+              color: '#3c4043', 
+              border: '1px solid #dadce0',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       {loading && data.accounts.length === 0 ? (
@@ -177,9 +194,6 @@ export default function Dashboard() {
                       <div key={email.id} className={styles.emailItem} style={{ backgroundColor: getSenderColor(senderEmailPart) }}>
                         <div className={styles.senderHeader}>
                           <span className={styles.senderName}>{senderName}</span>
-                        </div>
-                        <div className={styles.senderEmail}>
-                          {maskEmail(senderEmailPart)}
                         </div>
                         <div className={styles.subject}>{email.subject}</div>
                         <div className={styles.meta}>

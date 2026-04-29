@@ -1,22 +1,29 @@
 import { NextResponse } from 'next/server';
 
 export function middleware(request) {
-  // Check for the admin token cookie
+  const { pathname } = request.nextUrl;
+
+  // Allow these paths without authentication
+  if (
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/_next') ||
+    pathname === '/favicon.ico'
+  ) {
+    return NextResponse.next();
+  }
+
   const token = request.cookies.get('admin_token');
 
   if (!token) {
-    // If no token and trying to access protected route, redirect to login
-    return NextResponse.redirect(new URL('/admin/login', request.url));
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Allow access if token exists
   return NextResponse.next();
 }
 
-// See "Matching Paths" below to learn more
 export const config = {
   matcher: [
-    '/admin',
-    '/api/gmail/:path*'
+    '/((?!api/cron|_next/static|_next/image|favicon.ico).*)',
   ],
 };

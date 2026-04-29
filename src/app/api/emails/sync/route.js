@@ -95,14 +95,12 @@ export async function GET(request) {
         foundSubjects.push({ subject, from, labels: labelIds, date: date.toISOString(), id: msg.id });
 
         // Force 'Updates' folder for these specific senders to ensure they match Gmail UI
-        let folder = 'Primary Inbox';
+        let folder = 'Primary';
         if (labelIds.includes('SPAM')) folder = 'Spam';
-        else if (
-          labelIds.includes('CATEGORY_UPDATES') ||
-          labelIds.includes('CATEGORY_PROMOTIONS') ||
-          labelIds.includes('CATEGORY_SOCIAL') ||
-          labelIds.includes('CATEGORY_FORUMS')
-        ) folder = 'Updates';
+        else if (labelIds.includes('CATEGORY_UPDATES')) folder = 'Updates';
+        else if (labelIds.includes('CATEGORY_PROMOTIONS')) folder = 'Promotions';
+        else if (labelIds.includes('CATEGORY_SOCIAL')) folder = 'Social';
+        else if (labelIds.includes('CATEGORY_FORUMS')) folder = 'Forums';
 
         await prisma.emailCache.upsert({
           where: { messageId: msg.id },

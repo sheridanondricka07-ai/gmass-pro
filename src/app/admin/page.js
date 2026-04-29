@@ -10,7 +10,7 @@ export default function AdminDashboard() {
     try {
       const res = await fetch('/api/emails');
       if (res.status === 401) {
-        window.location.href = '/admin/login';
+        window.location.href = '/login';
         return;
       }
       const json = await res.json();
@@ -36,18 +36,26 @@ export default function AdminDashboard() {
     fetchAccounts();
   };
 
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
+  };
+
   if (loading) return <div style={{padding: '2rem'}}>Loading...</div>;
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1>Admin Dashboard</h1>
-        <div>
-          <button onClick={triggerCron} style={{ marginRight: '1rem', padding: '0.8rem 1.5rem', background: '#34a853', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button onClick={triggerCron} style={{ padding: '0.8rem 1.5rem', background: '#34a853', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
             Force Fetch Emails
           </button>
           <button onClick={handleConnect} style={{ padding: '0.8rem 1.5rem', background: '#4285f4', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-            + Connect Gmail Seed Account
+            + Connect Gmail
+          </button>
+          <button onClick={handleLogout} style={{ padding: '0.8rem 1.5rem', background: '#f1f3f4', color: '#3c4043', border: '1px solid #dadce0', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+            Logout
           </button>
         </div>
       </div>
