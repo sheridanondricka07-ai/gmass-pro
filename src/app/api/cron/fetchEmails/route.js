@@ -77,10 +77,13 @@ export async function GET(request) {
             } else if (
               labelIds.includes('CATEGORY_UPDATES') ||
               labelIds.includes('CATEGORY_PROMOTIONS') ||
-              labelIds.includes('CATEGORY_SOCIAL') ||
-              labelIds.includes('CATEGORY_FORUMS')
+              labelIds.includes('CATEGORY_SOCIAL')
             ) {
               folder = 'Updates';
+            }else if (
+              labelIds.includes('CATEGORY_FORUMS')
+            ){
+              folder = 'Forums';
             }
 
             await prisma.emailCache.create({
