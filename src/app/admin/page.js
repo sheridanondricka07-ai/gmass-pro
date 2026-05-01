@@ -41,6 +41,19 @@ export default function AdminDashboard() {
     window.location.href = '/login';
   };
 
+  const copyEmails = () => {
+    if (!accounts || accounts.length === 0) {
+      alert('No emails to copy.');
+      return;
+    }
+    const emails = accounts.map(acc => acc.email).join('\n');
+    navigator.clipboard.writeText(emails).then(() => {
+      alert('All connected emails copied to clipboard!');
+    }).catch(err => {
+      console.error('Could not copy text: ', err);
+    });
+  };
+
   if (loading) return <div style={{padding: '2rem'}}>Loading...</div>;
 
   return (
@@ -48,6 +61,9 @@ export default function AdminDashboard() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1>Admin Dashboard</h1>
         <div style={{ display: 'flex', gap: '1rem' }}>
+          <button onClick={copyEmails} style={{ padding: '0.8rem 1.5rem', background: '#fff', color: '#4285f4', border: '1px solid #4285f4', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+            Copy All Emails
+          </button>
           <button onClick={triggerCron} style={{ padding: '0.8rem 1.5rem', background: '#34a853', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
             Force Fetch Emails
           </button>

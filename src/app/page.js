@@ -108,6 +108,19 @@ export default function Dashboard() {
     window.location.href = '/login';
   };
 
+  const copyEmails = () => {
+    if (!data.accounts || data.accounts.length === 0) {
+      alert('No emails to copy.');
+      return;
+    }
+    const emails = data.accounts.map(acc => acc.email).join('\n');
+    navigator.clipboard.writeText(emails).then(() => {
+      alert('All connected emails copied to clipboard!');
+    }).catch(err => {
+      console.error('Could not copy text: ', err);
+    });
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -134,6 +147,21 @@ export default function Dashboard() {
           </span>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
+          <button 
+            onClick={copyEmails}
+            style={{
+              padding: '1rem 2rem', 
+              background: '#fff', 
+              color: 'var(--primary-color)', 
+              border: '1px solid var(--primary-color)',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Copy All Emails
+          </button>
           <a href="/admin" style={{
             padding: '1rem 2rem', 
             background: 'var(--primary-color)', 
