@@ -23,28 +23,34 @@ export async function GET(request) {
       process.env.GOOGLE_REDIRECT_URI
     );
 
+    // Set the refresh token
     oauth2Client.setCredentials({
-      access_token: account.accessToken,
       refresh_token: account.refreshToken,
     });
 
-    // Force token refresh; Google library will use the refresh token automatically
+    // Unconditionally refresh the access token to avoid expiry issues
     try {
-      const refreshed = await oauth2Client.getAccessToken();
-      // If a new access token is returned, update the DB
-      if (refreshed.token && refreshed.token !== account.accessToken) {
-        await prisma.seedAccount.update({
-          where: { id: account.id },
-          data: {
-            accessToken: refreshed.token,
-            // Google may provide new expiry date in credentials
-            expiryDate: oauth2Client.credentials.expiry_date,
-          },
-        });
-        console.log(`Refreshed token for ${account.email}`);
-      }
+      const { credentials } = await oauth2Client.refreshAccessToken();
+      
+      // Update the DB with the new tokens
+      await prisma.seedAccount.update({
+        where: { id: account.id },
+        data: {
+          accessToken: credentials.access_token,
+          expiryDate: credentials.expiry_date,
+          // Update refresh token if a new one is provided (rare, but good practice)
+          ...(credentials.refresh_token && { refreshToken: credentials.refresh_token })
+        },
+      });
+      
+      oauth2Client.setCredentials(credentials);
+      console.log(`Refreshed token for ${account.email}`);
     } catch (refreshErr) {
       console.error(`Failed to refresh token for ${account.email}:`, refreshErr);
+      // If refresh fails, we might as well skip this account or let it fail naturally below
+      accountReport.error = 'Token refresh failed: ' + refreshErr.message;
+      report.push(accountReport);
+      continue;
     }
 
         const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
