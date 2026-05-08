@@ -16,16 +16,36 @@ export async function GET(request) {
     for (const account of accounts) {
       const accountReport = { email: account.email, messagesFound: 0, messagesSaved: 0, error: null };
       try {
-        const oauth2Client = new google.auth.OAuth2(
-          process.env.GOOGLE_CLIENT_ID,
-          process.env.GOOGLE_CLIENT_SECRET,
-          process.env.GOOGLE_REDIRECT_URI
-        );
+    // Initialize OAuth2 client and refresh access token if needed
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
+    );
 
-        oauth2Client.setCredentials({
-          access_token: account.accessToken,
-          refresh_token: account.refreshToken,
+    oauth2Client.setCredentials({
+      access_token: account.accessToken,
+      refresh_token: account.refreshToken,
+    });
+
+    // Force token refresh; Google library will use the refresh token automatically
+    try {
+      const refreshed = await oauth2Client.getAccessToken();
+      // If a new access token is returned, update the DB
+      if (refreshed.token && refreshed.token !== account.accessToken) {
+        await prisma.seedAccount.update({
+          where: { id: account.id },
+          data: {
+            accessToken: refreshed.token,
+            // Google may provide new expiry date in credentials
+            expiryDate: oauth2Client.credentials.expiry_date,
+          },
         });
+        console.log(`Refreshed token for ${account.email}`);
+      }
+    } catch (refreshErr) {
+      console.error(`Failed to refresh token for ${account.email}:`, refreshErr);
+    }
 
         const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
