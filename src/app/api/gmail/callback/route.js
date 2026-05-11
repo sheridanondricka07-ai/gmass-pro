@@ -25,7 +25,7 @@ export async function GET(request) {
       auth: oauth2Client,
       version: 'v2',
     });
-    
+
     const { data } = await oauth2.userinfo.get();
     const email = data.email;
 
@@ -53,6 +53,6 @@ export async function GET(request) {
     return NextResponse.redirect(new URL('/admin', request.url));
   } catch (error) {
     console.error('OAuth Callback Error:', error);
-     return NextResponse.json({ error: 'Failed to authenticate', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to authenticate', details: error.message }, { status: 500 });
   }
 }
