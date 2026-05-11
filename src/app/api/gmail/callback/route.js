@@ -25,7 +25,7 @@ export async function GET(request) {
       auth: oauth2Client,
       version: 'v2',
     });
-
+    
     const { data } = await oauth2.userinfo.get();
     const email = data.email;
 
