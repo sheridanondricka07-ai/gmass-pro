@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import styles from './page.module.css';
 
 export default function Dashboard() {
@@ -14,6 +14,45 @@ export default function Dashboard() {
 
   const seenIds = useRef(null);
   const prevSearch = useRef(search);
+  const cardRefs = useRef(new Map());
+  const prevRects = useRef(new Map());
+
+  const setCardRef = (id) => (node) => {
+    if (node) cardRefs.current.set(id, node);
+    else cardRefs.current.delete(id);
+  };
+
+  // FLIP: when a new email pushes the list over, animate the *existing*
+  // cards sliding into their new slot instead of letting them jump there.
+  useLayoutEffect(() => {
+    const nextRects = new Map();
+    cardRefs.current.forEach((node, id) => {
+      nextRects.set(id, node.getBoundingClientRect());
+    });
+
+    cardRefs.current.forEach((node, id) => {
+      const prev = prevRects.current.get(id);
+      const next = nextRects.get(id);
+      if (!prev || !next) return;
+      const dx = prev.left - next.left;
+      if (Math.abs(dx) < 1) return;
+
+      node.style.transition = 'none';
+      node.style.transform = `translateX(${dx}px)`;
+      void node.offsetWidth; // force reflow so the jump above isn't animated
+      node.style.transition = 'transform 0.35s ease, box-shadow 0.12s ease';
+      node.style.transform = '';
+      // Hand transition control back to the stylesheet (hover effects etc.)
+      // once the slide finishes, instead of leaving the inline override in place.
+      node.addEventListener('transitionend', () => {
+        node.style.transition = '';
+      }, { once: true });
+    });
+
+    prevRects.current = nextRects;
+    // timeFilter also reflows the list (client-side) without changing `data`,
+    // so it needs to be a dependency too or prevRects goes stale.
+  }, [data, timeFilter]);
 
   const fetchEmails = async () => {
     try {
@@ -213,6 +252,7 @@ export default function Dashboard() {
                     return (
                       <div
                         key={email.id}
+                        ref={setCardRef(email.id)}
                         className={`${styles.emailItem} ${newEmailIds.has(email.id) ? styles.emailNew : ''}`}
                         style={{
                           '--sender-color': getSenderColor(senderEmailPart),
