@@ -76,17 +76,6 @@ export async function GET(request) {
       continue;
     }
 
-        oauth2Client.on('tokens', (tokens) => {
-          prisma.seedAccount.update({
-            where: { id: account.id },
-            data: {
-              accessToken: tokens.access_token || undefined,
-              refreshToken: tokens.refresh_token || undefined,
-              expiryDate: tokens.expiry_date || undefined,
-            }
-          }).catch(err => console.error(`Failed to persist refreshed tokens for ${account.email}:`, err));
-        });
-
         const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
         // Fetch latest messages (no filter to ensure we get everything)
