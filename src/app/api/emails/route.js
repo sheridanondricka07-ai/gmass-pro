@@ -25,7 +25,7 @@ export async function GET(request) {
       select: { id: true, email: true }
     });
 
-    // Get latest 10 emails for each account
+    // Get latest 50 emails for each account
     const accountsWithEmails = await Promise.all(
       accounts.map(async (account) => {
         const emails = await prisma.emailCache.findMany({

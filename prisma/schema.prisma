@@ -28,6 +28,6 @@ model EmailCache {
   subject   String
   snippet   String
   date      DateTime
-  folder    String   // "Primary Inbox", "Spam", "Updates"
+  folder    String   // "Primary", "Spam", "Updates", "Promotions", "Social", "Forums"
   createdAt DateTime @default(now())
 }

@@ -1,5 +1,3 @@
-const fetch = require('node-fetch'); // wait, Next.js environment might have global fetch
-
 async function run() {
   try {
     const res = await fetch('https://gmass-pro.vercel.app/api/emails', {

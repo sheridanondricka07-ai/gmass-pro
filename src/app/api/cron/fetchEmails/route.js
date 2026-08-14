@@ -1,12 +1,35 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
+import { jwtVerify } from 'jose';
 import prisma from '@/lib/prisma';
 
-export async function GET(request) {
-  try {
-    // Note: In production, you'd want to secure this endpoint with a secret key
-    // e.g. if (request.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) return 401;
+async function isAuthorized(request) {
+  // Allow Vercel Cron (or any caller) that presents the shared cron secret
+  const authHeader = request.headers.get('authorization');
+  if (process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`) {
+    return true;
+  }
 
+  // Allow an already-logged-in admin (e.g. the "Force Fetch Emails" button)
+  const token = request.cookies.get('admin_token')?.value;
+  if (token && process.env.JWT_SECRET) {
+    try {
+      await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+}
+
+export async function GET(request) {
+  if (!(await isAuthorized(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
     const accounts = await prisma.seedAccount.findMany({
       where: { status: 'active' }
     });
@@ -25,6 +48,17 @@ export async function GET(request) {
         oauth2Client.setCredentials({
           access_token: account.accessToken,
           refresh_token: account.refreshToken,
+        });
+
+        oauth2Client.on('tokens', (tokens) => {
+          prisma.seedAccount.update({
+            where: { id: account.id },
+            data: {
+              accessToken: tokens.access_token || undefined,
+              refreshToken: tokens.refresh_token || undefined,
+              expiryDate: tokens.expiry_date || undefined,
+            }
+          }).catch(err => console.error(`Failed to persist refreshed tokens for ${account.email}:`, err));
         });
 
         const gmail = google.gmail({ version: 'v1', auth: oauth2Client });

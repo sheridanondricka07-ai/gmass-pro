@@ -5,12 +5,17 @@ export async function POST(request) {
   try {
     const { username, password } = await request.json();
 
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is not configured');
+      return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    }
+
     if (
       username === process.env.ADMIN_USERNAME &&
       password === process.env.ADMIN_PASSWORD
     ) {
       // Create JWT
-      const token = jwt.sign({ username }, process.env.JWT_SECRET || 'secret', {
+      const token = jwt.sign({ username }, process.env.JWT_SECRET, {
         expiresIn: '1d',
       });
 

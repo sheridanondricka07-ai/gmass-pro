@@ -33,6 +33,17 @@ export async function GET(request) {
       refresh_token: account.refreshToken,
     });
 
+    oauth2Client.on('tokens', (tokens) => {
+      prisma.seedAccount.update({
+        where: { id: account.id },
+        data: {
+          accessToken: tokens.access_token || undefined,
+          refreshToken: tokens.refresh_token || undefined,
+          expiryDate: tokens.expiry_date || undefined,
+        }
+      }).catch(err => console.error(`Failed to persist refreshed tokens for ${account.email}:`, err));
+    });
+
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
     // 1. BULLETPROOF LOGIC: Fetch the absolute newest 100 emails across ALL folders

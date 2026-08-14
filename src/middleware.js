@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import { jwtVerify } from 'jose';
 
-export function middleware(request) {
+export async function middleware(request) {
   const { pathname } = request.nextUrl;
 
   // Allow these paths without authentication
@@ -13,10 +14,19 @@ export function middleware(request) {
     return NextResponse.next();
   }
 
-  const token = request.cookies.get('admin_token');
+  const token = request.cookies.get('admin_token')?.value;
 
   if (!token) {
     return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  try {
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    await jwtVerify(token, secret);
+  } catch (err) {
+    const response = NextResponse.redirect(new URL('/login', request.url));
+    response.cookies.delete('admin_token');
+    return response;
   }
 
   return NextResponse.next();
