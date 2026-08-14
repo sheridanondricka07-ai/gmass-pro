@@ -63,6 +63,14 @@ export default function Dashboard() {
     return `hsl(${hue}, 55%, 52%)`;
   };
 
+  // Subtle background wash so spam/inbox mail is scannable at a glance,
+  // on top of the per-sender accent border.
+  const getCardTint = (email) => {
+    if (email.folder === 'Spam') return 'var(--tint-danger)';
+    if (email.folder === 'Primary' || email.inInbox) return 'var(--tint-success)';
+    return undefined;
+  };
+
   const getBadgeClass = (folder) => {
     if (folder === 'Primary' || folder === 'Primary Inbox') return styles.badgePrimary;
     if (folder === 'Promotions') return styles.badgePromotions;
@@ -179,7 +187,10 @@ export default function Dashboard() {
                       <div
                         key={email.id}
                         className={styles.emailItem}
-                        style={{ '--sender-color': getSenderColor(senderEmailPart) }}
+                        style={{
+                          '--sender-color': getSenderColor(senderEmailPart),
+                          '--card-tint': getCardTint(email)
+                        }}
                       >
                         <div className={styles.senderName}>{senderName}</div>
                         <div className={styles.subject}>{email.subject}</div>
