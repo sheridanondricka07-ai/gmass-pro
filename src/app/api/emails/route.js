@@ -32,9 +32,13 @@ export async function GET(request) {
       accountFilter.userId = currentUser.userId;
     }
 
+    // Without an explicit order, Postgres can return rows in a different
+    // order after any UPDATE (e.g. the real-time sync refreshing tokens),
+    // which made the account cards visibly reshuffle on the dashboard.
     const accounts = await prisma.seedAccount.findMany({
       where: accountFilter,
-      select: { id: true, email: true }
+      select: { id: true, email: true },
+      orderBy: { id: 'asc' }
     });
 
     // Get latest 50 emails for each account
