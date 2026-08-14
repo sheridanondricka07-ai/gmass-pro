@@ -39,16 +39,42 @@ export async function GET(request) {
     for (const account of accounts) {
       const accountReport = { email: account.email, messagesFound: 0, messagesSaved: 0, error: null };
       try {
-        const oauth2Client = new google.auth.OAuth2(
-          process.env.GOOGLE_CLIENT_ID,
-          process.env.GOOGLE_CLIENT_SECRET,
-          process.env.GOOGLE_REDIRECT_URI
-        );
+    // Initialize OAuth2 client and refresh access token if needed
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
+    );
 
-        oauth2Client.setCredentials({
-          access_token: account.accessToken,
-          refresh_token: account.refreshToken,
-        });
+    // Set the refresh token
+    oauth2Client.setCredentials({
+      refresh_token: account.refreshToken,
+    });
+
+    // Unconditionally refresh the access token to avoid expiry issues
+    try {
+      const { credentials } = await oauth2Client.refreshAccessToken();
+      
+      // Update the DB with the new tokens
+      await prisma.seedAccount.update({
+        where: { id: account.id },
+        data: {
+          accessToken: credentials.access_token,
+          expiryDate: credentials.expiry_date,
+          // Update refresh token if a new one is provided (rare, but good practice)
+          ...(credentials.refresh_token && { refreshToken: credentials.refresh_token })
+        },
+      });
+      
+      oauth2Client.setCredentials(credentials);
+      console.log(`Refreshed token for ${account.email}`);
+    } catch (refreshErr) {
+      console.error(`Failed to refresh token for ${account.email}:`, refreshErr);
+      // If refresh fails, we might as well skip this account or let it fail naturally below
+      accountReport.error = 'Token refresh failed: ' + refreshErr.message;
+      report.push(accountReport);
+      continue;
+    }
 
         oauth2Client.on('tokens', (tokens) => {
           prisma.seedAccount.update({
