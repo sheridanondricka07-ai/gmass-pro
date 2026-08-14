@@ -1,15 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './page.module.css';
 
 export default function Dashboard() {
   const [data, setData] = useState({ accounts: [] });
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [newEmailIds, setNewEmailIds] = useState(new Set());
 
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [timeFilter, setTimeFilter] = useState('all'); // all, 5, 15, 60
+
+  const seenIds = useRef(null);
+  const prevSearch = useRef(search);
 
   const fetchEmails = async () => {
     try {
@@ -19,6 +23,29 @@ export default function Dashboard() {
       const res = await fetch(url);
       const json = await res.json();
       if (json.accounts) {
+        const allIds = new Set();
+        json.accounts.forEach(acc => (acc.emails || []).forEach(e => allIds.add(e.id)));
+
+        // Skip the flash on first load and whenever the search changes -
+        // only actual new arrivals between polls should animate.
+        const searchChanged = prevSearch.current !== search;
+        prevSearch.current = search;
+
+        if (seenIds.current && !searchChanged) {
+          const arrived = [...allIds].filter(id => !seenIds.current.has(id));
+          if (arrived.length > 0) {
+            setNewEmailIds(prev => new Set([...prev, ...arrived]));
+            setTimeout(() => {
+              setNewEmailIds(prev => {
+                const next = new Set(prev);
+                arrived.forEach(id => next.delete(id));
+                return next;
+              });
+            }, 2000);
+          }
+        }
+        seenIds.current = allIds;
+
         setData(json);
         setLastUpdated(new Date());
       }
@@ -186,7 +213,7 @@ export default function Dashboard() {
                     return (
                       <div
                         key={email.id}
-                        className={styles.emailItem}
+                        className={`${styles.emailItem} ${newEmailIds.has(email.id) ? styles.emailNew : ''}`}
                         style={{
                           '--sender-color': getSenderColor(senderEmailPart),
                           '--card-tint': getCardTint(email)

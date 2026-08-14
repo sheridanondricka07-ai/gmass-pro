@@ -291,13 +291,22 @@
   color: var(--text-secondary);
 }
 
-@keyframes slideIn {
-  from {
+@keyframes emailArrive {
+  0% {
     opacity: 0;
-    transform: translateX(-10px);
+    transform: translateY(-10px) scale(0.96);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--badge-inbox) 55%, transparent);
   }
-  to {
+  55% {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--badge-inbox) 35%, transparent);
   }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.emailNew {
+  animation: emailArrive 1.8s ease-out;
 }
