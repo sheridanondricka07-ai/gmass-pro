@@ -74,6 +74,8 @@ export async function saveMessage(gmail, accountId, messageId) {
     || (internalDate ? new Date(parseInt(internalDate)) : new Date());
   if (isNaN(date.getTime())) date = new Date();
 
+  const inInbox = labelIds.includes('INBOX');
+
   await prisma.emailCache.upsert({
     where: { messageId },
     update: {
@@ -81,7 +83,8 @@ export async function saveMessage(gmail, accountId, messageId) {
       subject: subject,
       snippet: msgData.data.snippet || '',
       date: date,
-      folder: labelsToFolder(labelIds)
+      folder: labelsToFolder(labelIds),
+      inInbox
     },
     create: {
       accountId,
@@ -90,7 +93,8 @@ export async function saveMessage(gmail, accountId, messageId) {
       subject: subject,
       snippet: msgData.data.snippet || '',
       date: date,
-      folder: labelsToFolder(labelIds)
+      folder: labelsToFolder(labelIds),
+      inInbox
     }
   });
 

@@ -31,5 +31,6 @@ model EmailCache {
   snippet   String
   date      DateTime
   folder    String   // "Primary", "Spam", "Updates", "Promotions", "Social", "Forums"
+  inInbox   Boolean  @default(false)
   createdAt DateTime @default(now())
 }

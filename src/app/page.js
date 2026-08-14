@@ -82,6 +82,23 @@ export default function Dashboard() {
     return styles.badgeUpdates;
   };
 
+  // Gmail's category tabs (Updates/Promotions/Social/Forums) all live inside
+  // the Inbox, so show an "Inbox" badge alongside the category badge when the
+  // message actually carries the INBOX label - matching Gmail's own UI.
+  const getBadges = (email) => {
+    if (email.folder === 'Spam') {
+      return [{ label: 'Spam', className: styles.badgeSpam }];
+    }
+    if (email.folder === 'Primary') {
+      return [{ label: 'Primary Inbox', className: styles.badgePrimary }];
+    }
+    const categoryBadge = { label: email.folder, className: getBadgeClass(email.folder) };
+    if (email.inInbox) {
+      return [{ label: 'Inbox', className: styles.badgeInbox }, categoryBadge];
+    }
+    return [categoryBadge];
+  };
+
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     window.location.href = '/login';
@@ -204,8 +221,12 @@ export default function Dashboard() {
                         </div>
                         <div className={styles.subject}>{email.subject}</div>
                         <div className={styles.meta}>
-                          <span className={`${styles.badge} ${getBadgeClass(email.folder)}`}>
-                            {email.folder}
+                          <span className={styles.badgeGroup}>
+                            {getBadges(email).map(b => (
+                              <span key={b.label} className={`${styles.badge} ${b.className}`}>
+                                {b.label}
+                              </span>
+                            ))}
                           </span>
                           <span className={styles.time}>{timeAgo(email.date)}</span>
                         </div>
