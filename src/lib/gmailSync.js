@@ -38,12 +38,26 @@ export function labelsToFolder(labelIds) {
   return 'Primary';
 }
 
+// The message's own "Date" header (and sometimes even Gmail's internalDate)
+// can be forged/inherited from a replayed message - spam relays commonly
+// resend old captured mail with the original headers intact. The topmost
+// "Received" header is stamped by Google's own MX server at the moment it
+// actually accepted the message, so it can't be forged by the sender.
+function getActualReceivedDate(headers) {
+  const received = headers.find(h => h.name === 'Received');
+  if (!received) return null;
+  const lastSemicolon = received.value.lastIndexOf(';');
+  if (lastSemicolon === -1) return null;
+  const date = new Date(received.value.slice(lastSemicolon + 1).trim());
+  return isNaN(date.getTime()) ? null : date;
+}
+
 export async function saveMessage(gmail, accountId, messageId) {
   const msgData = await gmail.users.messages.get({
     userId: 'me',
     id: messageId,
     format: 'metadata',
-    metadataHeaders: ['From', 'Subject', 'Date']
+    metadataHeaders: ['From', 'Subject', 'Date', 'Received']
   });
 
   const labelIds = msgData.data.labelIds || [];
@@ -56,7 +70,8 @@ export async function saveMessage(gmail, accountId, messageId) {
   const from = headers.find(h => h.name === 'From')?.value || '(Unknown Sender)';
 
   const internalDate = msgData.data.internalDate;
-  let date = internalDate ? new Date(parseInt(internalDate)) : new Date();
+  let date = getActualReceivedDate(headers)
+    || (internalDate ? new Date(parseInt(internalDate)) : new Date());
   if (isNaN(date.getTime())) date = new Date();
 
   await prisma.emailCache.upsert({
