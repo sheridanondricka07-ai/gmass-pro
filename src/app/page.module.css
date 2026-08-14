@@ -294,12 +294,12 @@
 @keyframes emailArrive {
   0% {
     opacity: 0;
-    transform: translateY(-10px) scale(0.96);
+    transform: translateX(-28px) scale(0.98);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--badge-inbox) 55%, transparent);
   }
   55% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateX(0) scale(1);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--badge-inbox) 35%, transparent);
   }
   100% {
