@@ -135,6 +135,23 @@
   background: var(--badge-inbox);
 }
 
+.disconnectBtn {
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--badge-spam);
+  border: 1px solid var(--badge-spam);
+  transition: background 0.15s, color 0.15s;
+}
+
+.disconnectBtn:hover {
+  background: var(--badge-spam);
+  color: #fff;
+}
+
 .footerLink {
   margin-top: 2rem;
   text-align: center;

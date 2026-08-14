@@ -37,6 +37,23 @@ export default function AdminDashboard() {
     fetchAccounts();
   };
 
+  const disconnectAccount = async (id, email) => {
+    if (!confirm(`Disconnect ${email}? This permanently deletes its cached emails too.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/accounts/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchAccounts();
+      } else {
+        alert('Failed to disconnect account.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to disconnect account.');
+    }
+  };
+
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     window.location.href = '/login';
@@ -86,10 +103,18 @@ export default function AdminDashboard() {
             {accounts.map(acc => (
               <li key={acc.id} className={styles.accountRow}>
                 <span className={styles.accountEmail}>{acc.email}</span>
-                <span className={styles.statusActive}>
-                  <span className={styles.statusDot} />
-                  Active
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span className={styles.statusActive}>
+                    <span className={styles.statusDot} />
+                    Active
+                  </span>
+                  <button
+                    onClick={() => disconnectAccount(acc.id, acc.email)}
+                    className={styles.disconnectBtn}
+                  >
+                    Disconnect
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
