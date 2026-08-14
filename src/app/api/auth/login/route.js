@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import prisma from '@/lib/prisma';
 
 export async function POST(request) {
   try {
@@ -10,35 +12,33 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }
 
-    if (
-      username === process.env.ADMIN_USERNAME &&
-      password === process.env.ADMIN_PASSWORD
-    ) {
-      // Create JWT
-      const token = jwt.sign({ username }, process.env.JWT_SECRET, {
-        expiresIn: '1d',
-      });
+    const user = await prisma.user.findUnique({ where: { username } });
 
-      const response = NextResponse.json({ success: true });
-      
-      // Set HTTP-only cookie
-      response.cookies.set({
-        name: 'admin_token',
-        value: token,
-        httpOnly: true,
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 60 * 60 * 24, // 1 day
-      });
-
-      return response;
+    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+      return NextResponse.json(
+        { error: 'Invalid credentials' },
+        { status: 401 }
+      );
     }
 
-    return NextResponse.json(
-      { error: 'Invalid credentials' },
-      { status: 401 }
-    );
+    const token = jwt.sign({ userId: user.id, username: user.username }, process.env.JWT_SECRET, {
+      expiresIn: '1d',
+    });
+
+    const response = NextResponse.json({ success: true });
+
+    response.cookies.set({
+      name: 'admin_token',
+      value: token,
+      httpOnly: true,
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24, // 1 day
+    });
+
+    return response;
   } catch (error) {
+    console.error('Login error:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

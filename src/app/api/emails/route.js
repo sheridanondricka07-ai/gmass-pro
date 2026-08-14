@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getCurrentUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -7,6 +8,7 @@ export const revalidate = 0;
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const search = searchParams.get('q');
+  const mine = searchParams.get('mine') === 'true';
 
   try {
     let whereClause = {};
@@ -19,9 +21,19 @@ export async function GET(request) {
       };
     }
 
-    // Get all accounts
+    // The public dashboard shows every connected seed account (shared team
+    // view); the admin panel passes ?mine=true to only manage its own.
+    const accountFilter = { status: 'active' };
+    if (mine) {
+      const currentUser = await getCurrentUser(request);
+      if (!currentUser) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      accountFilter.userId = currentUser.userId;
+    }
+
     const accounts = await prisma.seedAccount.findMany({
-      where: { status: 'active' },
+      where: accountFilter,
       select: { id: true, email: true }
     });
 

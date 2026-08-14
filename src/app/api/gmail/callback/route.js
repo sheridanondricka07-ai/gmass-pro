@@ -2,6 +2,7 @@ import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { fullSync, startWatch } from '@/lib/gmailSync';
+import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -10,6 +11,8 @@ export async function GET(request) {
   if (!code) {
     return NextResponse.json({ error: 'No code provided' }, { status: 400 });
   }
+
+  const currentUser = await getCurrentUser(request);
 
   try {
     const oauth2Client = new google.auth.OAuth2(
@@ -34,20 +37,22 @@ export async function GET(request) {
       throw new Error("Could not get email from Google");
     }
 
-    // Save to DB
+    // Save to DB, owned by whichever logged-in user connected it
     const account = await prisma.seedAccount.upsert({
       where: { email },
       update: {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token || undefined, // Only update if new refresh token provided
         expiryDate: tokens.expiry_date,
-        status: 'active'
+        status: 'active',
+        userId: currentUser?.userId ?? undefined
       },
       create: {
         email,
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
         expiryDate: tokens.expiry_date,
+        userId: currentUser?.userId
       }
     });
 

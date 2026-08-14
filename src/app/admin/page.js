@@ -9,7 +9,7 @@ export default function AdminDashboard() {
 
   const fetchAccounts = async () => {
     try {
-      const res = await fetch('/api/emails');
+      const res = await fetch('/api/emails?mine=true');
       if (res.status === 401) {
         window.location.href = '/login';
         return;

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getCurrentUser } from '@/lib/auth';
 
 export async function DELETE(request, { params }) {
   const id = parseInt(params.id);
@@ -7,9 +8,18 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ error: 'Invalid account id' }, { status: 400 });
   }
 
+  const currentUser = await getCurrentUser(request);
+  if (!currentUser) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const account = await prisma.seedAccount.findUnique({ where: { id } });
   if (!account) {
     return NextResponse.json({ error: 'Account not found' }, { status: 404 });
+  }
+
+  if (account.userId !== currentUser.userId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   // Best-effort: revoke the OAuth grant at Google so the stored tokens can't

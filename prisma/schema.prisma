@@ -8,6 +8,14 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  accounts     SeedAccount[]
+}
+
 model SeedAccount {
   id              Int      @id @default(autoincrement())
   email           String   @unique
@@ -19,6 +27,8 @@ model SeedAccount {
   emails          EmailCache[]
   historyId       String?
   watchExpiration BigInt?
+  userId          Int?
+  user            User?    @relation(fields: [userId], references: [id])
 }
 
 model EmailCache {
