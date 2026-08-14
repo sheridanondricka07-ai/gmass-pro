@@ -1,86 +1,186 @@
 .container {
   width: 100%;
-  padding: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem 3rem;
 }
 
 .header {
-  margin-bottom: 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin-bottom: 1.75rem;
+  padding: 1rem 1.25rem;
   display: flex;
   align-items: center;
   gap: 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
 }
 
 .searchInput {
   flex: 1;
-  padding: 1rem 1.5rem;
-  font-size: 1.1rem;
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   outline: none;
-  transition: border-color 0.2s;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  background: var(--page-bg);
+  color: var(--text-primary);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
 }
 
 .searchInput:focus {
   border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-tint);
+  background: var(--card-bg);
+}
+
+.timeSelect {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--page-bg);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.syncStatus {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.syncDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--badge-inbox);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--badge-inbox) 20%, transparent);
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.btn {
+  padding: 0.7rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btnPrimary {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.btnPrimary:hover {
+  background: var(--primary-hover);
+}
+
+.btnOutline {
+  background: transparent;
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btnOutline:hover {
+  background: var(--primary-tint);
+}
+
+.btnGhost {
+  background: var(--page-bg);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.btnGhost:hover {
+  background: var(--border-color);
 }
 
 .grid {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
   width: 100%;
 }
 
 .accountRow {
   background: var(--card-bg);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   display: flex;
-  min-height: 140px;
+  min-height: 150px;
   overflow: hidden;
   border: 1px solid var(--border-color);
+  transition: box-shadow 0.15s;
+}
+
+.accountRow:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .accountInfo {
-  width: 200px;
-  min-width: 200px;
-  padding: 1.5rem;
-  background: #f8f9fa;
+  width: 190px;
+  min-width: 190px;
+  padding: 1.5rem 1.25rem;
+  background: var(--page-bg);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
+  gap: 0.35rem;
 }
 
 .gmailLogo {
-  width: 40px;
-  height: 40px;
-  margin-bottom: 0.5rem;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 0.35rem;
 }
 
 .accountEmail {
-  font-weight: bold;
-  font-size: 0.9rem;
-  color: #333;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--text-primary);
   word-break: break-all;
 }
 
 .accountStatus {
-  font-size: 0.75rem;
-  color: #666;
-  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .emailList {
   flex: 1;
   display: flex;
   overflow-x: auto;
-  gap: 2px;
-  background: #fff;
-  padding: 0;
+  gap: 0.75rem;
+  background: var(--card-bg);
+  padding: 0.75rem;
   scrollbar-width: thin;
 }
 
@@ -89,43 +189,51 @@
 }
 
 .emailList::-webkit-scrollbar-thumb {
-  background: #ddd;
+  background: var(--border-color);
   border-radius: 10px;
 }
 
 .emailItem {
-  min-width: 280px;
-  max-width: 300px;
-  padding: 1rem;
-  border-radius: 0px;
+  min-width: 270px;
+  max-width: 290px;
+  padding: 1rem 1rem 0.9rem;
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   position: relative;
-  border-right: 1px solid white;
+  background: var(--page-bg);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--sender-color, var(--primary-color));
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.emailItem:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .senderName {
-  font-weight: bold;
-  color: #202124;
+  font-weight: 700;
+  color: var(--text-primary);
   margin-bottom: 2px;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
 }
 
 .senderEmail {
-  font-size: 0.8rem;
-  color: #5f6368;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
   margin-bottom: 4px;
 }
 
 .subject {
-  font-size: 0.85rem;
-  color: #3c4043;
-  margin-bottom: 1rem;
+  font-size: 0.83rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.9rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  height: 2.4rem;
+  height: 2.3rem;
 }
 
 .meta {
@@ -143,36 +251,44 @@
 }
 
 .badge {
-  padding: 5px 12px;
-  border-radius: 6px;
-  font-size: 0.85rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
   font-weight: 700;
-  color: white;
+  letter-spacing: 0.01em;
+  color: #fff;
   display: inline-block;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   white-space: nowrap;
 }
 
-.badgeInbox { background-color: #1e8e3e; }
-.badgePrimary { background-color: #1e8e3e; }
-.badgePromotions { background-color: #8e24aa; }
-.badgeSocial { background-color: #d93025; }
-.badgeUpdates { background-color: #e37400; }
-.badgeForums { background-color: #1a73e8; }
-.badgeSpam { background-color: #b71c1c; }
+.badgeInbox { background-color: var(--badge-inbox); }
+.badgePrimary { background-color: var(--badge-inbox); }
+.badgePromotions { background-color: var(--badge-promotions); }
+.badgeSocial { background-color: var(--badge-social); }
+.badgeUpdates { background-color: var(--badge-updates); }
+.badgeForums { background-color: var(--badge-forums); }
+.badgeSpam { background-color: var(--badge-spam); }
 
 .time {
   font-size: 0.7rem;
-  color: #888;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
-
-
 .emptyState {
-  padding: 2rem;
+  padding: 2.5rem;
   text-align: center;
-  color: #888;
+  color: var(--text-muted);
   font-style: italic;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border-color);
+}
+
+.loadingState {
+  text-align: center;
+  margin-top: 4rem;
+  color: var(--text-secondary);
 }
 
 @keyframes slideIn {

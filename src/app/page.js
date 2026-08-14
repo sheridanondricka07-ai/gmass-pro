@@ -43,7 +43,7 @@ export default function Dashboard() {
     const date = new Date(dateString);
     const now = new Date();
     const seconds = Math.floor((now - date) / 1000);
-    
+
     if (isNaN(seconds)) return 'Just now';
     if (seconds < 60) return `${seconds} seconds ago`;
     const minutes = Math.floor(seconds / 60);
@@ -53,23 +53,14 @@ export default function Dashboard() {
     return `${Math.floor(hours / 24)} days ago`;
   };
 
-  const maskEmail = (email) => {
-    if (!email) return '';
-    const [user, domain] = email.split('@');
-    if (!domain) return user;
-    const [domainName, tld] = domain.split('.');
-    const maskedDomain = 'x'.repeat(domainName.length);
-    return `${user}@${maskedDomain}.${tld || 'com'}`;
-  };
-
   const getSenderColor = (sender) => {
-    if (!sender) return '#ffffff';
+    if (!sender) return 'var(--primary-color)';
     let hash = 0;
     for (let i = 0; i < sender.length; i++) {
       hash = sender.charCodeAt(i) + ((hash << 5) - hash);
     }
     const hue = Math.abs(hash) % 360;
-    return `hsl(${hue}, 40%, 85%)`; 
+    return `hsl(${hue}, 55%, 52%)`;
   };
 
   const getBadgeClass = (folder) => {
@@ -120,76 +111,46 @@ export default function Dashboard() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div style={{ flex: 1, display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <input 
-            type="text" 
-            placeholder="Search by address, domain, subject or ESP" 
+        <div style={{ flex: 1, display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Search by address, domain, subject or ESP"
             className={styles.searchInput}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <select 
-            value={timeFilter} 
+          <select
+            value={timeFilter}
             onChange={(e) => setTimeFilter(e.target.value)}
-            style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+            className={styles.timeSelect}
           >
             <option value="all">Show All Time</option>
             <option value="5">Last 5 Minutes</option>
             <option value="15">Last 15 Minutes</option>
             <option value="60">Last 1 Hour</option>
           </select>
-          <span style={{ fontSize: '0.8rem', color: '#888', whiteSpace: 'nowrap' }}>
+          <span className={styles.syncStatus}>
+            <span className={styles.syncDot} />
             Last sync: {lastUpdated.toLocaleTimeString()}
           </span>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button 
-            onClick={copyEmails}
-            style={{
-              padding: '1rem 2rem', 
-              background: '#fff', 
-              color: 'var(--primary-color)', 
-              border: '1px solid var(--primary-color)',
-              borderRadius: '8px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-          >
+        <div className={styles.headerActions}>
+          <button onClick={copyEmails} className={`${styles.btn} ${styles.btnOutline}`}>
             Copy All Emails
           </button>
-          <a href="/admin" style={{
-            padding: '1rem 2rem', 
-            background: 'var(--primary-color)', 
-            color: 'white', 
-            borderRadius: '8px',
-            fontWeight: 'bold',
-            whiteSpace: 'nowrap'
-          }}>
+          <a href="/admin" className={`${styles.btn} ${styles.btnPrimary}`}>
             Manage Seeds
           </a>
-          <button 
-            onClick={handleLogout}
-            style={{
-              padding: '1rem 2rem', 
-              background: '#f1f3f4', 
-              color: '#3c4043', 
-              border: '1px solid #dadce0',
-              borderRadius: '8px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-          >
+          <button onClick={handleLogout} className={`${styles.btn} ${styles.btnGhost}`}>
             Logout
           </button>
         </div>
       </div>
 
       {loading && data.accounts.length === 0 ? (
-        <div style={{ textAlign: 'center', marginTop: '50px' }}>Loading Dashboard...</div>
+        <div className={styles.loadingState}>Loading Dashboard...</div>
       ) : (
-        <div className={styles.dashboard}>
+        <div className={styles.grid}>
         {data.accounts.map(account => {
           let accountEmails = account.emails || [];
           if (timeFilter !== 'all') {
@@ -208,17 +169,19 @@ export default function Dashboard() {
                 <div className={styles.accountEmail}>{account.email}</div>
                 <div className={styles.accountStatus}>Google Workspace</div>
               </div>
-              
+
               <div className={styles.emailList}>
                 {accountEmails && accountEmails.length > 0 ? (
                   accountEmails.map(email => {
                     const senderName = email.sender.split('<')[0].trim();
                     const senderEmailPart = email.sender.includes('<') ? email.sender.split('<')[1].replace('>', '') : email.sender;
                     return (
-                      <div key={email.id} className={styles.emailItem} style={{ backgroundColor: getSenderColor(senderEmailPart) }}>
-                        <div className={styles.senderHeader}>
-                          <span className={styles.senderName}>{senderName}</span>
-                        </div>
+                      <div
+                        key={email.id}
+                        className={styles.emailItem}
+                        style={{ '--sender-color': getSenderColor(senderEmailPart) }}
+                      >
+                        <div className={styles.senderName}>{senderName}</div>
                         <div className={styles.subject}>{email.subject}</div>
                         <div className={styles.meta}>
                           <span className={styles.badgeGroup}>
@@ -240,7 +203,7 @@ export default function Dashboard() {
             </div>
           )})}
           {data.accounts.length === 0 && !loading && (
-            <div style={{textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '8px'}}>
+            <div className={styles.emptyState}>
               No seed accounts connected. Please click "Manage Seeds" to connect accounts.
             </div>
           )}

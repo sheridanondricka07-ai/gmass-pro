@@ -1,0 +1,146 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 0.7rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btnPrimary {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.btnPrimary:hover {
+  background: var(--primary-hover);
+}
+
+.btnSuccess {
+  background: var(--badge-inbox);
+  color: #fff;
+}
+
+.btnSuccess:hover {
+  filter: brightness(1.1);
+}
+
+.btnOutline {
+  background: transparent;
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btnOutline:hover {
+  background: var(--primary-tint);
+}
+
+.btnGhost {
+  background: var(--page-bg);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.btnGhost:hover {
+  background: var(--border-color);
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  padding: 1.75rem;
+}
+
+.cardTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.emptyText {
+  color: var(--text-muted);
+}
+
+.accountList {
+  list-style: none;
+  padding: 0;
+}
+
+.accountRow {
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.accountRow:last-child {
+  border-bottom: none;
+}
+
+.accountEmail {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.statusActive {
+  color: var(--badge-inbox);
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--badge-inbox);
+}
+
+.footerLink {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.loading {
+  padding: 2rem;
+  color: var(--text-secondary);
+}

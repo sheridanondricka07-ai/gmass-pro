@@ -1,21 +1,87 @@
 :root {
-  --bg-color: #f8f9fa;
-  --text-color: #333;
-  --border-color: #e0e0e0;
-  
-  --primary-color: #4285f4;
-  --primary-hover: #3367d6;
+  color-scheme: light;
 
-  --inbox-bg: #e6f4ea;
-  --inbox-text: #137333;
-  
-  --spam-bg: #fce8e6;
-  --spam-text: #c5221f;
-
-  --updates-bg: #fef7e0;
-  --updates-text: #b06000;
-  
+  --page-bg: #f9f9f7;
   --card-bg: #ffffff;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --border-color: #e1e0d9;
+  --border-strong: rgba(11, 11, 11, 0.12);
+
+  --primary-color: #2a78d6;
+  --primary-hover: #1f5eab;
+  --primary-tint: #eaf2fc;
+
+  /* Categorical badge colors - fixed roles, never reassigned */
+  --badge-inbox: #008300;
+  --badge-updates: #eb6834;
+  --badge-promotions: #4a3aa7;
+  --badge-social: #1baf7a;
+  --badge-forums: #2a78d6;
+  --badge-spam: #e34948;
+
+  --shadow-sm: 0 1px 2px rgba(11, 11, 11, 0.06);
+  --shadow-md: 0 4px 12px rgba(11, 11, 11, 0.08);
+  --shadow-lg: 0 8px 24px rgba(11, 11, 11, 0.10);
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --page-bg: #0d0d0d;
+    --card-bg: #1a1a19;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --border-color: #2c2c2a;
+    --border-strong: rgba(255, 255, 255, 0.14);
+
+    --primary-color: #3987e5;
+    --primary-hover: #5c9fec;
+    --primary-tint: rgba(57, 135, 229, 0.14);
+
+    --badge-inbox: #008300;
+    --badge-updates: #d95926;
+    --badge-promotions: #9085e9;
+    --badge-social: #199e70;
+    --badge-forums: #3987e5;
+    --badge-spam: #e66767;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --page-bg: #0d0d0d;
+  --card-bg: #1a1a19;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #898781;
+  --border-color: #2c2c2a;
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  --primary-color: #3987e5;
+  --primary-hover: #5c9fec;
+  --primary-tint: rgba(57, 135, 229, 0.14);
+
+  --badge-inbox: #008300;
+  --badge-updates: #d95926;
+  --badge-promotions: #9085e9;
+  --badge-social: #199e70;
+  --badge-forums: #3987e5;
+  --badge-spam: #e66767;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -24,11 +90,16 @@
   padding: 0;
 }
 
+html, body {
+  height: 100%;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-color);
+  background-color: var(--page-bg);
+  color: var(--text-primary);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -38,4 +109,12 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+}
+
+::selection {
+  background: var(--primary-tint);
 }
