@@ -8,6 +8,7 @@ export async function middleware(request) {
   if (
     pathname.startsWith('/login') ||
     pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/gmail/webhook') ||
     pathname.startsWith('/_next') ||
     pathname === '/favicon.ico'
   ) {
@@ -34,6 +35,6 @@ export async function middleware(request) {
 
 export const config = {
   matcher: [
-    '/((?!api/cron|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api/cron|api/gmail/webhook|_next/static|_next/image|favicon.ico).*)',
   ],
 };

@@ -9,14 +9,16 @@ datasource db {
 }
 
 model SeedAccount {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
-  accessToken  String?
-  refreshToken String?
-  expiryDate   BigInt?
-  status       String   @default("active")
-  createdAt    DateTime @default(now())
-  emails       EmailCache[]
+  id              Int      @id @default(autoincrement())
+  email           String   @unique
+  accessToken     String?
+  refreshToken    String?
+  expiryDate      BigInt?
+  status          String   @default("active")
+  createdAt       DateTime @default(now())
+  emails          EmailCache[]
+  historyId       String?
+  watchExpiration BigInt?
 }
 
 model EmailCache {

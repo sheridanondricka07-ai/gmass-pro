@@ -1,6 +1,7 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { fullSync, startWatch } from '@/lib/gmailSync';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -34,7 +35,7 @@ export async function GET(request) {
     }
 
     // Save to DB
-    await prisma.seedAccount.upsert({
+    const account = await prisma.seedAccount.upsert({
       where: { email },
       update: {
         accessToken: tokens.access_token,
@@ -49,6 +50,16 @@ export async function GET(request) {
         expiryDate: tokens.expiry_date,
       }
     });
+
+    // Pull existing mail immediately and start real-time push notifications
+    // so new mail shows up within seconds instead of waiting for the next poll.
+    try {
+      const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+      await fullSync(gmail, account.id);
+      await startWatch(gmail, account.id);
+    } catch (syncErr) {
+      console.error(`Initial sync/watch failed for ${email}:`, syncErr);
+    }
 
     return NextResponse.redirect(new URL('/admin', request.url));
   } catch (error) {

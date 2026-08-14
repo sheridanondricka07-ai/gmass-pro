@@ -9,14 +9,13 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   const [lastUpdated, setLastUpdated] = useState(new Date());
-  const [isSyncing, setIsSyncing] = useState(false);
   const [timeFilter, setTimeFilter] = useState('all'); // all, 5, 15, 60
 
   const fetchEmails = async () => {
     try {
       const url = new URL('/api/emails', window.location.origin);
       if (search) url.searchParams.append('q', search);
-      
+
       const res = await fetch(url);
       const json = await res.json();
       if (json.accounts) {
@@ -30,34 +29,14 @@ export default function Dashboard() {
     }
   };
 
-  const triggerBackgroundFetch = async () => {
-    if (data.accounts.length === 0) return;
-    setIsSyncing(true);
-    
-    for (const account of data.accounts) {
-      try {
-        await fetch(`/api/emails/sync?accountId=${account.id}`);
-      } catch (err) {
-        console.error("Background sync failed for account", account.id, err);
-      }
-    }
-    await fetchEmails(); 
-    setIsSyncing(false);
-  };
-
-
   useEffect(() => {
     fetchEmails();
-    const dataInterval = setInterval(fetchEmails, 5000); // UI Refresh every 5s
-    
-    // Trigger granular Gmail fetch every 30 seconds while page is open (to avoid Vercel firewall)
-    const fetchInterval = setInterval(triggerBackgroundFetch, 30000); 
-    
-    return () => {
-      clearInterval(dataInterval);
-      clearInterval(fetchInterval);
-    };
-  }, [search, data.accounts.length]);
+    // New mail is pushed into the DB in real time via the Gmail webhook, so
+    // this just needs to poll our own cache for the UI to feel live.
+    const dataInterval = setInterval(fetchEmails, 3000);
+
+    return () => clearInterval(dataInterval);
+  }, [search]);
 
   // Utility to format "time ago"
   const timeAgo = (dateString) => {
@@ -143,7 +122,7 @@ export default function Dashboard() {
             <option value="60">Last 1 Hour</option>
           </select>
           <span style={{ fontSize: '0.8rem', color: '#888', whiteSpace: 'nowrap' }}>
-            Last sync: {lastUpdated.toLocaleTimeString()} {isSyncing && '(Syncing...)'}
+            Last sync: {lastUpdated.toLocaleTimeString()}
           </span>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>

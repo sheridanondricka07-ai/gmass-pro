@@ -2,6 +2,7 @@ import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import prisma from '@/lib/prisma';
+import { startWatch, fullSync } from '@/lib/gmailSync';
 
 async function isAuthorized(request) {
   // Allow Vercel Cron (or any caller) that presents the shared cron secret
@@ -78,77 +79,23 @@ export async function GET(request) {
 
         const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-        // Fetch latest messages (no filter to ensure we get everything)
-        const res = await gmail.users.messages.list({
-          userId: 'me',
-          maxResults: 100,
-          includeSpamTrash: true 
-        });
-
-        const messages = res.data.messages || [];
-        accountReport.messagesFound = messages.length;
-        console.log(`Found ${messages.length} potential messages for ${account.email}`);
-
-        for (const msg of messages) {
-          console.log(`Processing message ${msg.id}...`);
-          // Check if message is already in cache
-          const existing = await prisma.emailCache.findUnique({
-            where: { messageId: msg.id }
-          });
-
-          if (!existing) {
-            // Fetch full message details
-            const msgData = await gmail.users.messages.get({
-              userId: 'me',
-              id: msg.id,
-              format: 'metadata',
-              metadataHeaders: ['From', 'Subject', 'Date']
-            });
-
-            const headers = msgData.data.payload.headers || [];
-            const subject = headers.find(h => h.name === 'Subject')?.value || '(No Subject)';
-            const from = headers.find(h => h.name === 'From')?.value || '(Unknown Sender)';
-            
-            // Use Gmail's internalDate (arrival time) for perfect sorting
-            const internalDate = msgData.data.internalDate;
-            let date = internalDate ? new Date(parseInt(internalDate)) : new Date();
-            if (isNaN(date.getTime())) date = new Date();
-            
-            const labelIds = msgData.data.labelIds || [];
-
-            // Skip outgoing or deleted messages only
-            if (labelIds.some(l => ['DRAFT', 'SENT', 'TRASH', 'CHAT'].includes(l))) continue;
-
-            let folder = 'Primary';
-            if (labelIds.includes('SPAM')) {
-              folder = 'Spam';
-            } else if (labelIds.includes('CATEGORY_UPDATES')) {
-              folder = 'Updates';
-            } else if (labelIds.includes('CATEGORY_PROMOTIONS')) {
-              folder = 'Promotions';
-            } else if (labelIds.includes('CATEGORY_SOCIAL')) {
-              folder = 'Social';
-            } else if (labelIds.includes('CATEGORY_FORUMS')) {
-              folder = 'Forums';
-            }
-
-            await prisma.emailCache.create({
-              data: {
-                accountId: account.id,
-                messageId: msg.id,
-                sender: from,
-                subject: subject,
-                snippet: msgData.data.snippet || '',
-                date: date,
-                folder: folder
-              }
-            });
-            accountReport.messagesSaved++;
-            console.log(`Saved email ${msg.id} to database.`);
-          } else {
-            console.log(`Email ${msg.id} already exists in database.`);
+        // Gmail push notification watches expire after 7 days - renew if
+        // missing or expiring within the next 24h so real-time sync keeps working.
+        const dayFromNow = Date.now() + 24 * 60 * 60 * 1000;
+        if (!account.watchExpiration || Number(account.watchExpiration) < dayFromNow) {
+          try {
+            await startWatch(gmail, account.id);
+            console.log(`Renewed Gmail watch for ${account.email}`);
+          } catch (watchErr) {
+            console.error(`Failed to renew watch for ${account.email}:`, watchErr);
           }
         }
+
+        // Full nightly backstop scan - upserts, so it's safe to run even if
+        // the webhook is concurrently writing the same messages.
+        const { messagesFound, messagesSaved } = await fullSync(gmail, account.id);
+        accountReport.messagesFound = messagesFound;
+        accountReport.messagesSaved = messagesSaved;
       } catch (err) {
         console.error(`Error processing account ${account.email}:`, err);
         accountReport.error = err.message;
